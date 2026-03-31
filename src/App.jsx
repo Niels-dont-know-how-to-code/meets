@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Plus, Loader2 } from 'lucide-react'
 import { useAuth } from './hooks/useAuth'
+import ProfileSettingsModal from './components/Auth/ProfileSettingsModal'
 import { useGeolocation } from './hooks/useGeolocation'
 import { useEvents } from './hooks/useEvents'
 import { useToast } from './hooks/useToast'
@@ -18,7 +19,7 @@ import Toast from './components/Toast'
 
 export default function App() {
   // Auth
-  const { user, loading: authLoading, signOut, isAdmin, displayName } = useAuth()
+  const { user, loading: authLoading, signOut, updateProfile, updatePassword, isAdmin, displayName, avatarUrl } = useAuth()
 
   // Auth modal state
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -59,6 +60,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [activeTab, setActiveTab] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [showSettings, setShowSettings] = useState(false)
 
   // Filtered events for list (by bounds and category)
   const filteredEvents = useMemo(() => {
@@ -196,7 +198,7 @@ export default function App() {
       </div>
 
       <div className="absolute top-4 right-4 z-10 flex items-center gap-2 animate-fade-in flex-shrink-0">
-        <LoginButton user={user} onLoginClick={() => openAuthModal('login')} signOut={signOut} displayName={displayName} />
+        <LoginButton user={user} onLoginClick={() => openAuthModal('login')} signOut={signOut} displayName={displayName} avatarUrl={avatarUrl} onSettingsClick={() => setShowSettings(true)} />
         <FloatingControls
           onToggleList={handleToggleList}
           onHostEvent={handleHostEvent}
@@ -277,6 +279,19 @@ export default function App() {
         onClose={() => setShowAuthModal(false)}
         initialTab={authInitialTab}
       />
+
+      {/* Profile Settings Modal */}
+      {showSettings && (
+        <ProfileSettingsModal
+          user={user}
+          displayName={displayName}
+          avatarUrl={avatarUrl}
+          onClose={() => setShowSettings(false)}
+          updateProfile={updateProfile}
+          updatePassword={updatePassword}
+          showToast={showToast}
+        />
+      )}
 
       {/* Toast notifications */}
       {toast && (
