@@ -96,6 +96,8 @@ export default function App() {
     setSelectedDate(date instanceof Date ? date : new Date(date))
     setShowList(false)
     setShowEventDetail(null)
+    setSearchQuery('')
+    setSelectedCategory(null)
   }
 
   const handleToggleList = () => {
@@ -188,19 +190,17 @@ export default function App() {
       />
 
       {/* Floating controls over the map */}
-      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 animate-fade-in">
+      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 animate-fade-in flex-shrink-0">
         <DateNavigator selectedDate={selectedDate} onDateChange={handleDateChange} />
         <CategoryFilter selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
       </div>
 
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-2 animate-fade-in">
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2 animate-fade-in flex-shrink-0">
         <LoginButton user={user} onLoginClick={() => openAuthModal('login')} signOut={signOut} displayName={displayName} />
         <FloatingControls
           onToggleList={handleToggleList}
           onHostEvent={handleHostEvent}
           showList={showList}
-          user={user}
-          onLogin={() => openAuthModal('login')}
         />
       </div>
 
@@ -236,6 +236,7 @@ export default function App() {
         onToggleInterest={handleToggleInterest}
         loading={eventsLoading}
         onRefresh={refreshEvents}
+        onLoginRequired={() => openAuthModal('signup')}
       />
 
       {/* Event Detail Modal */}

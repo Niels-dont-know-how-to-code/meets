@@ -10,7 +10,7 @@ export default function Toast({ message, type = 'success', onClose }) {
   const isError = type === 'error';
 
   return (
-    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 animate-toast-in">
+    <div className="fixed bottom-24 md:bottom-20 left-1/2 -translate-x-1/2 z-50 animate-toast-in max-w-[90vw]">
       <div
         className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-float-lg font-body text-sm font-medium
           ${isError ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'}`}

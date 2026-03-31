@@ -38,10 +38,7 @@ export default function EventMarker({ event, isSelected, onClick }) {
     })
   }, [event.category])
 
-  const position = [
-    event.location?.lat ?? event.lat,
-    event.location?.lng ?? event.lng,
-  ]
+  const position = [event.lat, event.lng]
 
   const category = event.category || 'party'
   const label = CATEGORY_LABELS[category] || category
@@ -76,6 +73,10 @@ export default function EventMarker({ event, isSelected, onClick }) {
               </span>
             )}
           </div>
+
+          <p className="text-xs text-meets-500 font-display font-semibold mt-2 hover:underline">
+            View details &rarr;
+          </p>
         </div>
       </Popup>
     </Marker>

@@ -66,6 +66,8 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
     if (!form.end_time) newErrors.end_time = true;
     if (!form.category) newErrors.category = true;
     if (!form.organizer_name.trim()) newErrors.organizer_name = true;
+    if (form.lat === null || form.lng === null) newErrors.location = true;
+    if (form.start_time && form.end_time && form.start_time === form.end_time) newErrors.end_time = true;
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -220,7 +222,7 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
             {/* Location */}
             <div>
               <label className="block font-display text-sm font-medium text-ink mb-1">
-                Location
+                Location <span className="text-red-400">*</span>
               </label>
               <LocationPicker
                 value={
@@ -228,8 +230,14 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
                     ? { lat: form.lat, lng: form.lng, address_label: form.address_label }
                     : null
                 }
-                onChange={handleLocationChange}
+                onChange={(location) => {
+                  handleLocationChange(location);
+                  if (errors.location) setErrors((prev) => ({ ...prev, location: false }));
+                }}
               />
+              {errors.location && (
+                <p className="text-xs text-red-500 mt-1 font-body">Please select a location</p>
+              )}
             </div>
           </div>
 

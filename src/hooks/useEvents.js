@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { formatDateForApi } from '../lib/dateUtils'
 
@@ -7,6 +7,7 @@ export function useEvents(selectedDate) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [userInterests, setUserInterests] = useState(new Set())
+  const fetchIdRef = useRef(0)
 
   const fetchUserInterests = useCallback(async (userId) => {
     const { data, error: err } = await supabase
@@ -23,6 +24,7 @@ export function useEvents(selectedDate) {
   }, [])
 
   const fetchEvents = useCallback(async (date) => {
+    const currentId = ++fetchIdRef.current
     setLoading(true)
     setError(null)
 
@@ -32,6 +34,7 @@ export function useEvents(selectedDate) {
       })
 
       if (rpcError) throw rpcError
+      if (currentId !== fetchIdRef.current) return // stale request, discard
 
       setEvents(data || [])
 

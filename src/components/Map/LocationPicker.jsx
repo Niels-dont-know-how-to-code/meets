@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { Search, MapPin, Crosshair } from 'lucide-react'
@@ -49,7 +49,8 @@ export default function LocationPicker({ value, onChange }) {
   const [suggestions, setSuggestions] = useState([])
   const [isSearching, setIsSearching] = useState(false)
 
-  const mapCenter = value ? [value.lat, value.lng] : DEFAULT_CENTER
+  // Use a stable initial center so MapContainer only mounts once
+  const initialCenter = useMemo(() => DEFAULT_CENTER, [])
 
   // --- Search ---
   const handleSearch = useCallback(async () => {
@@ -175,8 +176,9 @@ export default function LocationPicker({ value, onChange }) {
       <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-card"
            style={{ height: 300 }}>
         <MapContainer
-          center={mapCenter}
-          zoom={value ? 16 : DEFAULT_ZOOM}
+          key="location-picker-map"
+          center={initialCenter}
+          zoom={DEFAULT_ZOOM}
           className="w-full h-full"
           style={{ height: '100%', width: '100%' }}
           zoomControl={false}

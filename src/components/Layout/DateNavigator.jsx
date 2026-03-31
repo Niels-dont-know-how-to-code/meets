@@ -50,7 +50,7 @@ export default function DateNavigator({ selectedDate, onDateChange }) {
         <ChevronLeft size={20} />
       </button>
 
-      <span className="font-display font-bold text-ink text-sm min-w-[100px] text-center select-none">
+      <span className="font-display font-bold text-ink text-xs md:text-sm min-w-[80px] md:min-w-[100px] text-center select-none">
         {formatDateShort(selectedDate)}
       </span>
 

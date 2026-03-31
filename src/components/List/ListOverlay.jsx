@@ -18,6 +18,7 @@ export default function ListOverlay({
   onToggleInterest,
   loading,
   onRefresh,
+  onLoginRequired,
 }) {
   if (!show) return null;
 
@@ -130,6 +131,7 @@ export default function ListOverlay({
             activeTab={activeTab}
             onTabChange={onTabChange}
             isAuthenticated={!!user}
+            onLoginRequired={onLoginRequired}
           />
         </div>
 

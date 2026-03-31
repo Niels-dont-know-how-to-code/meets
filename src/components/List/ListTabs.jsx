@@ -1,7 +1,11 @@
 import { Heart } from 'lucide-react';
 
-export default function ListTabs({ activeTab = 'all', onTabChange, isAuthenticated }) {
+export default function ListTabs({ activeTab = 'all', onTabChange, isAuthenticated, onLoginRequired }) {
   const handleInterestsClick = () => {
+    if (!isAuthenticated && onLoginRequired) {
+      onLoginRequired();
+      return;
+    }
     onTabChange('interests');
   };
 
