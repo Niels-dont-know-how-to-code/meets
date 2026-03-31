@@ -138,3 +138,17 @@
 .leaflet-popup-close-button:hover {
   color: #0F172A !important;
 }
+
+/* Subtle attribution */
+.leaflet-control-attribution {
+  font-size: 9px !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  color: #94A3B8 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px 0 0 0 !important;
+}
+
+.leaflet-control-attribution a {
+  color: #94A3B8 !important;
+  text-decoration: none !important;
+}

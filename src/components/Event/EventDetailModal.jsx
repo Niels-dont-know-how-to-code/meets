@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, MapPin, Clock, User, Pencil, Trash2, Calendar } from 'lucide-react';
+import { X, MapPin, Clock, User, Pencil, Trash2, Calendar, ExternalLink } from 'lucide-react';
 import { formatTime, formatDate } from '../../lib/dateUtils';
 import CategoryBadge from './CategoryBadge';
 import InterestedButton from './InterestedButton';
@@ -81,10 +81,19 @@ export default function EventDetailModal({
 
             {/* Location */}
             {event.address_label && (
-              <div className="flex items-center gap-3 text-ink-secondary">
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${event.lat},${event.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 text-meets-600 hover:text-meets-700 transition-colors group"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <MapPin size={18} className="shrink-0" />
-                <span className="font-body text-sm">{event.address_label}</span>
-              </div>
+                <span className="font-body text-sm underline decoration-meets-200 group-hover:decoration-meets-500 underline-offset-2">
+                  {event.address_label}
+                </span>
+                <ExternalLink size={14} className="shrink-0 opacity-50 group-hover:opacity-100" />
+              </a>
             )}
 
             {/* Organizer */}

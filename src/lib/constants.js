@@ -20,4 +20,4 @@ export const CATEGORY_LABELS = {
 
 export const DEFAULT_CENTER = [50.8798, 4.7005]
 
-export const DEFAULT_ZOOM = 13
+export const DEFAULT_ZOOM = 14
