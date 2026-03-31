@@ -62,11 +62,14 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
   const validate = () => {
     const newErrors = {};
     if (!form.title.trim()) newErrors.title = true;
+    if (form.title.length > 200) newErrors.title = true;
     if (!form.date) newErrors.date = true;
     if (!form.start_time) newErrors.start_time = true;
     if (!form.end_time) newErrors.end_time = true;
     if (!form.category) newErrors.category = true;
     if (!form.organizer_name.trim()) newErrors.organizer_name = true;
+    if (form.organizer_name.length > 100) newErrors.organizer_name = true;
+    if (form.description && form.description.length > 2000) newErrors.description = true;
     if (form.lat === null || form.lng === null) newErrors.location = true;
     if (form.start_time && form.end_time && form.start_time === form.end_time) newErrors.end_time = true;
     setErrors(newErrors);
