@@ -3,7 +3,7 @@ import { X, Mail, Loader2 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 
 export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
-  const { signUp, signIn } = useAuth()
+  const { signUp, signIn, resetPassword } = useAuth()
   const [tab, setTab] = useState(initialTab)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -12,6 +12,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
   const [submitting, setSubmitting] = useState(false)
   const [signUpSuccess, setSignUpSuccess] = useState(false)
   const [confirmedEmail, setConfirmedEmail] = useState('')
+  const [resetSent, setResetSent] = useState(false)
 
   if (!isOpen) return null
 
@@ -21,6 +22,28 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
     setDisplayName('')
     setError('')
     setSignUpSuccess(false)
+    setResetSent(false)
+  }
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setError('Please enter your email address first')
+      return
+    }
+    setError('')
+    setSubmitting(true)
+    try {
+      const { error: resetErr } = await resetPassword(email.trim())
+      if (resetErr) {
+        setError(resetErr.message)
+        return
+      }
+      setResetSent(true)
+    } catch (err) {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const switchTab = (newTab) => {
@@ -239,7 +262,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
           )}
 
           {/* Log In Tab */}
-          {tab === 'login' && (
+          {tab === 'login' && !resetSent && (
             <form onSubmit={handleSignIn} className="space-y-4">
               <div>
                 <input
@@ -286,17 +309,51 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
                 )}
               </button>
 
-              <p className="text-center text-sm text-ink-secondary font-body">
-                Don't have an account?{' '}
+              <div className="flex items-center justify-between text-sm font-body">
                 <button
                   type="button"
-                  onClick={() => switchTab('signup')}
-                  className="text-meets-500 font-medium hover:underline"
+                  onClick={handleForgotPassword}
+                  disabled={submitting}
+                  className="text-ink-secondary hover:text-meets-500 transition-colors"
                 >
-                  Sign up
+                  Forgot password?
                 </button>
-              </p>
+                <p className="text-ink-secondary">
+                  No account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => switchTab('signup')}
+                    className="text-meets-500 font-medium hover:underline"
+                  >
+                    Sign up
+                  </button>
+                </p>
+              </div>
             </form>
+          )}
+
+          {/* Password Reset Sent */}
+          {tab === 'login' && resetSent && (
+            <div className="text-center py-6">
+              <div className="w-16 h-16 rounded-full bg-meets-50 flex items-center justify-center mx-auto mb-4">
+                <Mail size={28} className="text-meets-500" />
+              </div>
+              <h3 className="font-display text-lg font-bold text-ink mb-2">
+                Check your email!
+              </h3>
+              <p className="font-body text-sm text-ink-secondary leading-relaxed">
+                We sent a password reset link to{' '}
+                <span className="font-medium text-ink">{email}</span>.
+                Click the link to set a new password.
+              </p>
+              <button
+                onClick={() => setResetSent(false)}
+                className="mt-6 px-6 py-2.5 rounded-xl font-display font-bold text-sm
+                  text-meets-500 hover:bg-meets-50 transition-colors"
+              >
+                Back to Log In
+              </button>
+            </div>
           )}
         </div>
       </div>

@@ -54,9 +54,24 @@ export function useAuth() {
     return { data, error }
   }
 
-  const updatePassword = async (newPassword) => {
+  const updatePassword = async (oldPassword, newPassword) => {
+    // Verify old password by re-authenticating
+    const { error: verifyErr } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: oldPassword,
+    })
+    if (verifyErr) {
+      return { data: null, error: { message: 'Current password is incorrect' } }
+    }
     const { data, error } = await supabase.auth.updateUser({
       password: newPassword,
+    })
+    return { data, error }
+  }
+
+  const resetPassword = async (email) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
     })
     return { data, error }
   }
@@ -70,5 +85,5 @@ export function useAuth() {
 
   const avatarUrl = user?.user_metadata?.avatar_url || null
 
-  return { user, loading, signUp, signIn, signOut, updateProfile, updatePassword, isAdmin, displayName, avatarUrl }
+  return { user, loading, signUp, signIn, signOut, updateProfile, updatePassword, resetPassword, isAdmin, displayName, avatarUrl }
 }

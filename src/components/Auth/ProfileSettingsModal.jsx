@@ -11,6 +11,7 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, onC
   const fileRef = useRef(null)
 
   // Password state
+  const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [changingPassword, setChangingPassword] = useState(false)
@@ -84,8 +85,12 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, onC
 
   const handleChangePassword = async (e) => {
     e.preventDefault()
+    if (!currentPassword) {
+      showToast('Please enter your current password', 'error')
+      return
+    }
     if (newPassword.length < 6) {
-      showToast('Password must be at least 6 characters', 'error')
+      showToast('New password must be at least 6 characters', 'error')
       return
     }
     if (newPassword !== confirmPassword) {
@@ -94,9 +99,10 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, onC
     }
     setChangingPassword(true)
     try {
-      const { error } = await updatePassword(newPassword)
+      const { error } = await updatePassword(currentPassword, newPassword)
       if (error) throw error
       showToast('Password changed!')
+      setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
     } catch (err) {
@@ -248,6 +254,20 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, onC
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
                 <label className="block text-sm font-display font-semibold text-ink mb-1.5">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  className="w-full px-4 py-3 bg-surface-secondary rounded-xl font-body text-sm
+                    placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-meets-500
+                    transition-shadow"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-display font-semibold text-ink mb-1.5">
                   New Password
                 </label>
                 <input
@@ -277,7 +297,7 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, onC
 
               <button
                 type="submit"
-                disabled={changingPassword || !newPassword || !confirmPassword}
+                disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
                 className="w-full py-3 rounded-xl font-display font-bold text-sm text-white
                   bg-meets-500 hover:bg-meets-600 disabled:opacity-50 transition-colors
                   flex items-center justify-center gap-2"
