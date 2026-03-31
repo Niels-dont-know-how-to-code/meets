@@ -1,15 +1,19 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Heart } from 'lucide-react';
 
 export default function InterestedButton({ count, isInterested, onToggle, size = 'sm' }) {
   const [animating, setAnimating] = useState(false);
+  const timeoutRef = useRef(null);
 
   const handleClick = (e) => {
     e.stopPropagation();
     setAnimating(true);
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setAnimating(false), 300);
     onToggle();
-    setTimeout(() => setAnimating(false), 600);
   };
+
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
   const sizeClasses = size === 'md'
     ? 'gap-2 text-base px-4 py-2'

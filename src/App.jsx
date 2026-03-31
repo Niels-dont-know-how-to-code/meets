@@ -282,6 +282,7 @@ export default function App() {
       {toast && (
         <Toast
           key={toast.id}
+          id={toast.id}
           message={toast.message}
           type={toast.type}
           onClose={hideToast}

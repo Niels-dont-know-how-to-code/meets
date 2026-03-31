@@ -51,7 +51,7 @@ export default function ListOverlay({
     if (searchQuery) {
       return (
         <div className="flex flex-col items-center justify-center py-12 text-ink-tertiary">
-          <Search size={40} className="mb-3 opacity-50" />
+          <Search size={40} className="mb-3 opacity-50" aria-hidden="true" />
           <p className="font-body text-sm font-medium">No matches for '{searchQuery}'</p>
           <p className="font-body text-xs mt-1 opacity-70">Try a different search term</p>
         </div>
@@ -61,7 +61,7 @@ export default function ListOverlay({
     if (activeTab === 'interests') {
       return (
         <div className="flex flex-col items-center justify-center py-12 text-ink-tertiary">
-          <Heart size={40} className="mb-3 opacity-50" />
+          <Heart size={40} className="mb-3 opacity-50" aria-hidden="true" />
           <p className="font-body text-sm font-medium">No favorites yet</p>
           <p className="font-body text-xs mt-1 opacity-70">Tap the heart on events you like</p>
         </div>
@@ -70,7 +70,7 @@ export default function ListOverlay({
 
     return (
       <div className="flex flex-col items-center justify-center py-12 text-ink-tertiary">
-        <Calendar size={40} className="mb-3 opacity-50" />
+        <Calendar size={40} className="mb-3 opacity-50" aria-hidden="true" />
         <p className="font-body text-sm font-medium">No events for this date</p>
         <p className="font-body text-xs mt-1 opacity-70">Try another date or host your own!</p>
       </div>

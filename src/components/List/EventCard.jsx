@@ -23,7 +23,7 @@ export default function EventCard({ event, onClick, compact = false, index, isIn
 
           <h3
             className={`font-display font-bold text-ink leading-snug ${
-              compact ? 'text-sm truncate' : 'text-base'
+              compact ? 'text-sm truncate' : 'text-base line-clamp-2'
             }`}
           >
             {event.title}

@@ -12,6 +12,7 @@ export default function SearchBar({ value, onChange, placeholder = 'Search event
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        autoComplete="off"
         className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-surface-secondary border-none
           font-body text-sm text-ink placeholder:text-ink-tertiary
           focus:outline-none focus:ring-2 focus:ring-meets-500 transition-shadow"

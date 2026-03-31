@@ -1,11 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { CheckCircle, AlertCircle, X } from 'lucide-react';
 
-export default function Toast({ message, type = 'success', onClose }) {
+export default function Toast({ id, message, type = 'success', onClose }) {
+  const timerRef = useRef(null);
+
   useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
+    timerRef.current = setTimeout(onClose, 3000);
+    return () => clearTimeout(timerRef.current);
+  }, [id]);
 
   const isError = type === 'error';
 

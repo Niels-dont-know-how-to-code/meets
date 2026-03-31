@@ -20,6 +20,7 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // signUp and signIn return { data, error } directly — errors are handled by the caller (AuthModal)
   const signUp = async (email, password, displayName) => {
     const { data, error } = await supabase.auth.signUp({
       email,

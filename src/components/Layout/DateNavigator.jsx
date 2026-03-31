@@ -1,15 +1,13 @@
 import { useRef } from 'react';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { startOfDay } from 'date-fns';
 import { formatDateShort, getNextDay, getPrevDay, formatDateForApi } from '../../lib/dateUtils';
 
 export default function DateNavigator({ selectedDate, onDateChange }) {
   const dateInputRef = useRef(null);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const selected = new Date(selectedDate);
-  selected.setHours(0, 0, 0, 0);
+  const today = startOfDay(new Date());
+  const selected = startOfDay(new Date(selectedDate));
 
   const isPastDisabled = selected <= today;
 

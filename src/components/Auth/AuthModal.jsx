@@ -89,6 +89,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
         }
         return
       }
+      resetForm()
       onClose()
     } catch (err) {
       setError('Something went wrong. Please try again.')
@@ -101,7 +102,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        onClick={onClose}
+        onClick={() => { resetForm(); onClose(); }}
         className="absolute inset-0 bg-black/50 animate-fade-in"
       />
 
@@ -109,7 +110,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
       <div className="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-overlay animate-slide-up overflow-hidden">
         {/* Close button */}
         <button
-          onClick={onClose}
+          onClick={() => { resetForm(); onClose(); }}
           className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-surface-secondary
             transition-colors text-ink-secondary z-10"
         >
