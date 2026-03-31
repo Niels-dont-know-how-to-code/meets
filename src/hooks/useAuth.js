@@ -43,6 +43,23 @@ export function useAuth() {
     supabase.auth.signOut()
   }
 
+  const updateProfile = async ({ displayName: newName, avatarUrl }) => {
+    const updates = {}
+    if (newName !== undefined) updates.display_name = newName
+    if (avatarUrl !== undefined) updates.avatar_url = avatarUrl
+    const { data, error } = await supabase.auth.updateUser({
+      data: updates,
+    })
+    return { data, error }
+  }
+
+  const updatePassword = async (newPassword) => {
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword,
+    })
+    return { data, error }
+  }
+
   const isAdmin = user?.app_metadata?.role === 'admin'
 
   const displayName =
@@ -50,5 +67,7 @@ export function useAuth() {
     user?.email?.split('@')[0] ||
     'User'
 
-  return { user, loading, signUp, signIn, signOut, isAdmin, displayName }
+  const avatarUrl = user?.user_metadata?.avatar_url || null
+
+  return { user, loading, signUp, signIn, signOut, updateProfile, updatePassword, isAdmin, displayName, avatarUrl }
 }
