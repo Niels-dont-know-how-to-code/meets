@@ -1,4 +1,5 @@
-import { X, MapPin, RefreshCw, Calendar, Heart, Search } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { X, MapPin, RefreshCw, Calendar, Heart, Search, Plus } from 'lucide-react';
 import SearchBar from './SearchBar';
 import ListTabs from './ListTabs';
 import EventCard from './EventCard';
@@ -19,7 +20,54 @@ export default function ListOverlay({
   loading,
   onRefresh,
   onLoginRequired,
+  onHostEvent,
 }) {
+  // Pull-to-refresh state
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const touchStartY = useRef(0);
+  const scrollRef = useRef(null);
+  const isPulling = useRef(false);
+
+  // Attach non-passive touchmove for Safari preventDefault support
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const handleTouchMove = (e) => {
+      if (!isPulling.current) return;
+      const dy = e.touches[0].clientY - touchStartY.current;
+      if (dy > 0 && el.scrollTop <= 0) {
+        e.preventDefault();
+        setPullDistance(Math.min(dy * 0.4, 80));
+      } else {
+        isPulling.current = false;
+        setPullDistance(0);
+      }
+    };
+
+    el.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => el.removeEventListener('touchmove', handleTouchMove);
+  }, [show]);
+
+  const handleTouchStart = useCallback((e) => {
+    if (scrollRef.current && scrollRef.current.scrollTop <= 0) {
+      touchStartY.current = e.touches[0].clientY;
+      isPulling.current = true;
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(async () => {
+    if (pullDistance > 50 && onRefresh) {
+      setIsRefreshing(true);
+      setPullDistance(50);
+      await onRefresh();
+      setIsRefreshing(false);
+    }
+    isPulling.current = false;
+    setPullDistance(0);
+  }, [pullDistance, onRefresh]);
+
   if (!show) return null;
 
   let filtered = events;
@@ -52,7 +100,7 @@ export default function ListOverlay({
       return (
         <div className="flex flex-col items-center justify-center py-12 text-ink-tertiary">
           <Search size={40} className="mb-3 opacity-50" aria-hidden="true" />
-          <p className="font-body text-sm font-medium">No matches for '{searchQuery}'</p>
+          <p className="font-body text-sm font-medium">No matches for &apos;{searchQuery}&apos;</p>
           <p className="font-body text-xs mt-1 opacity-70">Try a different search term</p>
         </div>
       );
@@ -69,10 +117,23 @@ export default function ListOverlay({
     }
 
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-ink-tertiary">
-        <Calendar size={40} className="mb-3 opacity-50" aria-hidden="true" />
-        <p className="font-body text-sm font-medium">No events for this date</p>
-        <p className="font-body text-xs mt-1 opacity-70">Try another date or host your own!</p>
+      <div className="flex flex-col items-center justify-center py-16 px-6 text-center animate-bounce-in">
+        <div className="w-16 h-16 rounded-full bg-meets-50 flex items-center justify-center mb-4">
+          <Calendar size={28} className="text-meets-500" />
+        </div>
+        <h3 className="font-display font-bold text-lg text-ink mb-1">No events yet</h3>
+        <p className="font-body text-sm text-ink-secondary mb-5 max-w-[240px]">
+          Be the first to host something on this day!
+        </p>
+        {onHostEvent && (
+          <button
+            onClick={onHostEvent}
+            className="btn-primary inline-flex items-center gap-2 text-sm"
+          >
+            <Plus size={16} />
+            Host an Event
+          </button>
+        )}
       </div>
     );
   };
@@ -136,7 +197,27 @@ export default function ListOverlay({
         </div>
 
         {/* Event List */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 scrollbar-hide">
+        <div
+          ref={scrollRef}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className="flex-1 overflow-y-auto px-4 py-3 space-y-2 scrollbar-hide"
+          style={{ overscrollBehavior: 'none' }}
+        >
+          {/* Pull-to-refresh indicator */}
+          {pullDistance > 0 && (
+            <div
+              className="flex justify-center overflow-hidden transition-all duration-150"
+              style={{ height: pullDistance, opacity: Math.min(pullDistance / 50, 1) }}
+            >
+              <RefreshCw
+                size={20}
+                className={`text-meets-500 mt-2 ${isRefreshing ? 'animate-spin' : ''}`}
+                style={{ transform: `rotate(${pullDistance * 4}deg)` }}
+              />
+            </div>
+          )}
+
           {loading ? (
             <>
               <SkeletonCard />

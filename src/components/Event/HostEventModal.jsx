@@ -3,6 +3,7 @@ import { X, Loader2 } from 'lucide-react';
 import { CATEGORIES, CATEGORY_LABELS } from '../../lib/constants';
 import { formatDateForApi } from '../../lib/dateUtils';
 import LocationPicker from '../Map/LocationPicker';
+import TimePicker from './TimePicker';
 
 export default function HostEventModal({ user, onClose, onSuccess, editingEvent = null }) {
   const todayStr = formatDateForApi(new Date());
@@ -152,22 +153,22 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
                 <label className="block font-display text-sm font-medium text-ink mb-1">
                   Start Time <span className="text-red-400">*</span>
                 </label>
-                <input
-                  type="time"
+                <TimePicker
                   value={form.start_time}
-                  onChange={(e) => updateField('start_time', e.target.value)}
-                  className={inputClass('start_time')}
+                  onChange={(v) => updateField('start_time', v)}
+                  label="Start Time"
+                  error={errors.start_time}
                 />
               </div>
               <div>
                 <label className="block font-display text-sm font-medium text-ink mb-1">
                   End Time <span className="text-red-400">*</span>
                 </label>
-                <input
-                  type="time"
+                <TimePicker
                   value={form.end_time}
-                  onChange={(e) => updateField('end_time', e.target.value)}
-                  className={inputClass('end_time')}
+                  onChange={(v) => updateField('end_time', v)}
+                  label="End Time"
+                  error={errors.end_time}
                 />
               </div>
             </div>

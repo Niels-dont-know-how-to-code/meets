@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import { CATEGORY_COLORS, CATEGORY_LABELS } from '../../lib/constants'
+import { isHappeningNow } from '../../lib/dateUtils'
 
 // Lucide icon SVG paths (24x24 viewBox) — inlined so we can embed them in the
 // divIcon HTML string without needing React rendering.
@@ -17,6 +18,8 @@ function formatTime(timeStr) {
 }
 
 export default function EventMarker({ event, isSelected, onClick }) {
+  const isLive = isHappeningNow(event.start_time, event.end_time, event.date)
+
   const icon = useMemo(() => {
     const category = event.category || 'party'
     const color = CATEGORY_COLORS[category] || CATEGORY_COLORS.party
@@ -26,6 +29,7 @@ export default function EventMarker({ event, isSelected, onClick }) {
       className: '',
       html: `
         <div class="marker-wrapper">
+          ${isLive ? '<div class="marker-live-dot"></div>' : ''}
           <div class="marker-pin ${category}" style="background-color: ${color};">
             ${svg}
           </div>
@@ -36,7 +40,7 @@ export default function EventMarker({ event, isSelected, onClick }) {
       iconAnchor: [20, 52],
       popupAnchor: [0, -52],
     })
-  }, [event.category])
+  }, [event.category, isLive])
 
   const position = [event.lat, event.lng]
 

@@ -34,3 +34,18 @@ export function formatDateShort(date) {
   if (isTomorrow(date)) return 'Tomorrow'
   return format(date, 'EEE, d MMM')
 }
+
+export function isHappeningNow(startTime, endTime, eventDate) {
+  if (!startTime || !endTime || !eventDate) return false
+  const now = new Date()
+  const today = format(now, 'yyyy-MM-dd')
+  if (eventDate !== today) return false
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  const [sh, sm] = startTime.slice(0, 5).split(':').map(Number)
+  const [eh, em] = endTime.slice(0, 5).split(':').map(Number)
+  const startMin = sh * 60 + sm
+  const endMin = eh * 60 + em
+
+  return currentMinutes >= startMin && currentMinutes <= endMin
+}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { X, MapPin, Clock, User, Pencil, Trash2, Calendar, ExternalLink } from 'lucide-react';
-import { formatTime, formatDate } from '../../lib/dateUtils';
+import { X, MapPin, Clock, User, Pencil, Trash2, Calendar, ExternalLink, Share2 } from 'lucide-react';
+import { formatTime, formatDate, isHappeningNow } from '../../lib/dateUtils';
 import CategoryBadge from './CategoryBadge';
 import InterestedButton from './InterestedButton';
 
@@ -14,6 +14,7 @@ export default function EventDetailModal({
   interestedCount,
   onToggleInterest,
   isAdmin,
+  showToast,
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -28,6 +29,22 @@ export default function EventDetailModal({
       return;
     }
     onDelete(event.id);
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}${window.location.pathname}?event=${event.id}`
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: event.title, url })
+      } catch { /* user cancelled */ }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url)
+        showToast?.('Link copied to clipboard!')
+      } catch {
+        showToast?.('Could not copy link', 'error')
+      }
+    }
   };
 
   return (
@@ -58,9 +75,16 @@ export default function EventDetailModal({
             {event.title}
           </h2>
 
-          {/* Category */}
-          <div className="mt-3">
+          {/* Category + Live */}
+          <div className="mt-3 flex items-center gap-2">
             <CategoryBadge category={event.category} />
+            {isHappeningNow(event.start_time, event.end_time, event.date) && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+                bg-green-100 text-green-700 text-[10px] font-display font-bold uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                Live
+              </span>
+            )}
           </div>
 
           {/* Details */}
@@ -119,14 +143,23 @@ export default function EventDetailModal({
             Created by {event.creator_username || 'Anonymous'}
           </p>
 
-          {/* Interested button */}
-          <div className="mt-5 flex items-center">
+          {/* Interested + Share */}
+          <div className="mt-5 flex items-center gap-3">
             <InterestedButton
               count={interestedCount}
               isInterested={isInterested}
               onToggle={onToggleInterest}
               size="md"
             />
+            <button
+              onClick={handleShare}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full
+                bg-surface-secondary hover:bg-gray-100 text-ink-secondary
+                text-sm font-display font-medium transition-colors"
+            >
+              <Share2 size={16} />
+              Share
+            </button>
           </div>
 
           {/* Manage buttons */}

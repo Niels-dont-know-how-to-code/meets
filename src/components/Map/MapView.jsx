@@ -8,9 +8,10 @@ import { DEFAULT_CENTER, DEFAULT_ZOOM } from '../../lib/constants'
  * Inner component that flies the map to a new center whenever the
  * `center` prop changes.
  */
-function MapRecenter({ center }) {
+function MapRecenter({ center, flyTarget }) {
   const map = useMap()
   const prevCenter = useRef(center)
+  const prevFlyTarget = useRef(null)
 
   useEffect(() => {
     if (!center) return
@@ -23,6 +24,14 @@ function MapRecenter({ center }) {
     }
   }, [center, map])
 
+  useEffect(() => {
+    if (!flyTarget) return
+    if (flyTarget._t !== prevFlyTarget.current) {
+      map.flyTo([flyTarget.lat, flyTarget.lng], Math.max(map.getZoom(), 15), { duration: 0.8 })
+      prevFlyTarget.current = flyTarget._t
+    }
+  }, [flyTarget, map])
+
   return null
 }
 
@@ -33,6 +42,7 @@ export default function MapView({
   onBoundsChange,
   center = DEFAULT_CENTER,
   zoom = DEFAULT_ZOOM,
+  flyTarget = null,
 }) {
   return (
     <MapContainer
@@ -47,7 +57,7 @@ export default function MapView({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
       />
 
-      <MapRecenter center={center} />
+      <MapRecenter center={center} flyTarget={flyTarget} />
       <MapBoundsTracker onBoundsChange={onBoundsChange} />
 
       {events.map((event) => (

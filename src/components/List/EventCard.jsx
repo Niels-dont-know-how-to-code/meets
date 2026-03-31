@@ -1,5 +1,5 @@
 import { Clock } from 'lucide-react';
-import { formatTime } from '../../lib/dateUtils';
+import { formatTime, isHappeningNow } from '../../lib/dateUtils';
 import CategoryBadge from '../Event/CategoryBadge';
 import InterestedButton from '../Event/InterestedButton';
 
@@ -19,6 +19,13 @@ export default function EventCard({ event, onClick, compact = false, index, isIn
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
             <CategoryBadge category={event.category} />
+            {isHappeningNow(event.start_time, event.end_time, event.date) && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+                bg-green-100 text-green-700 text-[10px] font-display font-bold uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                Live
+              </span>
+            )}
           </div>
 
           <h3

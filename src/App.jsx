@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Plus, Loader2 } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Plus, Loader2, MapPin } from 'lucide-react'
 import { useAuth } from './hooks/useAuth'
 import ProfileSettingsModal from './components/Auth/ProfileSettingsModal'
 import { useGeolocation } from './hooks/useGeolocation'
@@ -61,6 +61,29 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [showSettings, setShowSettings] = useState(false)
+  const [mapFlyTarget, setMapFlyTarget] = useState(null)
+  const [pendingEventId, setPendingEventId] = useState(null)
+
+  // Share link: read ?event=<id> from URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const eventId = params.get('event')
+    if (eventId) {
+      window.history.replaceState({}, '', window.location.pathname)
+      setPendingEventId(eventId)
+    }
+  }, [])
+
+  // Open shared event once events are loaded
+  useEffect(() => {
+    if (pendingEventId && events.length > 0) {
+      const found = events.find(e => e.id === pendingEventId)
+      if (found) {
+        setShowEventDetail(found)
+        setPendingEventId(null)
+      }
+    }
+  }, [events, pendingEventId])
 
   // Filtered events for list (by bounds and category)
   const filteredEvents = useMemo(() => {
@@ -88,6 +111,13 @@ export default function App() {
   // Handlers
   const handleMarkerClick = (event) => {
     setShowEventDetail(event)
+  }
+
+  const handleEventCardClick = (event) => {
+    setShowEventDetail(event)
+    if (event.lat != null && event.lng != null) {
+      setMapFlyTarget({ lat: event.lat, lng: event.lng, _t: Date.now() })
+    }
   }
 
   const handleBoundsChange = (bounds) => {
@@ -189,6 +219,7 @@ export default function App() {
         onBoundsChange={handleBoundsChange}
         center={position}
         zoom={DEFAULT_ZOOM}
+        flyTarget={mapFlyTarget}
       />
 
       {/* Floating controls over the map */}
@@ -205,6 +236,24 @@ export default function App() {
           showList={showList}
         />
       </div>
+
+      {/* Empty state overlay on map */}
+      {!eventsLoading && events.length === 0 && !showList && !showHostForm && !showEventDetail && (
+        <div className="absolute inset-0 z-[5] flex items-center justify-center pointer-events-none">
+          <div className="card p-6 text-center max-w-xs pointer-events-auto animate-bounce-in">
+            <div className="w-14 h-14 rounded-full bg-meets-50 flex items-center justify-center mx-auto mb-3">
+              <MapPin size={24} className="text-meets-500" />
+            </div>
+            <h3 className="font-display font-bold text-base text-ink mb-1">Nothing here yet</h3>
+            <p className="font-body text-sm text-ink-secondary mb-4">
+              No events on this date. Why not create one?
+            </p>
+            <button onClick={handleHostEvent} className="btn-primary text-sm px-5 py-2">
+              Host Event
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Host Event FAB at bottom */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10">
@@ -229,7 +278,7 @@ export default function App() {
         show={showList}
         onClose={() => setShowList(false)}
         user={user}
-        onEventClick={handleMarkerClick}
+        onEventClick={handleEventCardClick}
         activeTab={activeTab}
         onTabChange={setActiveTab}
         searchQuery={searchQuery}
@@ -239,6 +288,7 @@ export default function App() {
         loading={eventsLoading}
         onRefresh={refreshEvents}
         onLoginRequired={() => openAuthModal('signup')}
+        onHostEvent={handleHostEvent}
       />
 
       {/* Event Detail Modal */}
@@ -257,6 +307,7 @@ export default function App() {
           interestedCount={showEventDetail.interested_count}
           onToggleInterest={() => handleToggleInterest(showEventDetail.id)}
           isAdmin={isAdmin}
+          showToast={showToast}
         />
       )}
 

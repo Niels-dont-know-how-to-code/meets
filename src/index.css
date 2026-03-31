@@ -152,3 +152,40 @@
   color: #94A3B8 !important;
   text-decoration: none !important;
 }
+
+/* Time picker scroll wheel */
+.time-wheel {
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.time-wheel-item {
+  scroll-snap-align: center;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Live indicator on map markers */
+.marker-wrapper {
+  position: relative;
+}
+
+.marker-live-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  background: #22C55E;
+  border: 2px solid white;
+  border-radius: 50%;
+  animation: livePulse 1.5s ease-in-out infinite;
+  z-index: 10;
+}
+
+@keyframes livePulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.7; }
+}
