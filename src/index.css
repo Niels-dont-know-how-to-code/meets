@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Leaflet CSS - imported in main.jsx instead */
+
+@layer base {
+  html, body, #root {
+    @apply h-full w-full m-0 p-0 overflow-hidden;
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+
+  * {
+    @apply box-border;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-meets-500 hover:bg-meets-600 text-white font-display font-semibold
+           px-5 py-2.5 rounded-2xl transition-all duration-200
+           active:scale-95 shadow-float;
+  }
+
+  .btn-secondary {
+    @apply bg-white hover:bg-surface-secondary text-ink font-display font-medium
+           px-4 py-2 rounded-2xl transition-all duration-200
+           active:scale-95 shadow-card border border-gray-100;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-card p-4 transition-all duration-200
+           border border-gray-50;
+  }
+
+  .overlay-panel {
+    @apply rounded-t-3xl shadow-overlay;
+    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+  }
+
+  .category-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-display font-semibold;
+  }
+
+  .floating-btn {
+    @apply bg-white rounded-2xl shadow-float p-3 transition-all duration-200
+           active:scale-95 hover:shadow-float-lg border border-white/80;
+    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.95);
+  }
+}
+
+@layer utilities {
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+  .stagger-5 { animation-delay: 0.25s; }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Custom Leaflet overrides for Waze-inspired look */
+.leaflet-container {
+  font-family: 'DM Sans', system-ui, sans-serif !important;
+  z-index: 0;
+}
+
+.leaflet-popup-content-wrapper {
+  @apply rounded-2xl shadow-float !important;
+  padding: 0 !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  min-width: 200px;
+}
+
+.leaflet-popup-tip {
+  @apply shadow-card !important;
+}
+
+/* Subtle noise background for overlay panels */
+.bg-noise {
+  background-color: #FFFFFF;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* Custom marker wrapper */
+.marker-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.25));
+}
+
+/* Custom marker pin */
+.marker-pin {
+  @apply flex items-center justify-center rounded-full
+         border-[3px] border-white cursor-pointer transition-transform duration-200;
+  width: 40px;
+  height: 40px;
+}
+
+.marker-wrapper:hover .marker-pin {
+  transform: scale(1.15);
+}
+
+/* Triangle pointer below marker */
+.marker-pointer {
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 10px solid currentColor;
+  margin-top: -2px;
+}
+
+.marker-pin.party { @apply bg-party; }
+.marker-pin.culture { @apply bg-culture; }
+.marker-pin.sports { @apply bg-sports; }
+
+.leaflet-popup-close-button {
+  color: #94A3B8 !important;
+  font-size: 20px !important;
+  padding: 6px 8px 0 0 !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #0F172A !important;
+}
