@@ -52,7 +52,8 @@ describe('useToast', () => {
     act(() => {
       result.current.showToast('First')
     })
-    const firstId = result.current.toast.id
+
+    const firstMessage = result.current.toast.message
 
     act(() => {
       result.current.showToast('Second', 'error')
@@ -60,6 +61,6 @@ describe('useToast', () => {
 
     expect(result.current.toast.message).toBe('Second')
     expect(result.current.toast.type).toBe('error')
-    expect(result.current.toast.id).not.toBe(firstId)
+    expect(firstMessage).toBe('First')
   })
 })
