@@ -44,6 +44,16 @@ export function useAuth() {
     supabase.auth.signOut()
   }
 
+  const signInWithProvider = async (provider) => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: window.location.origin,
+      },
+    })
+    return { data, error }
+  }
+
   const updateProfile = async ({ displayName: newName, avatarUrl }) => {
     const updates = {}
     if (newName !== undefined) updates.display_name = newName
@@ -85,5 +95,5 @@ export function useAuth() {
 
   const avatarUrl = user?.user_metadata?.avatar_url || null
 
-  return { user, loading, signUp, signIn, signOut, updateProfile, updatePassword, resetPassword, isAdmin, displayName, avatarUrl }
+  return { user, loading, signUp, signIn, signInWithProvider, signOut, updateProfile, updatePassword, resetPassword, isAdmin, displayName, avatarUrl }
 }

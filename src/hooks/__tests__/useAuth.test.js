@@ -9,6 +9,7 @@ const mockSignInWithPassword = vi.fn()
 const mockSignOut = vi.fn()
 const mockUpdateUser = vi.fn()
 const mockResetPasswordForEmail = vi.fn()
+const mockSignInWithOAuth = vi.fn()
 
 vi.mock('../../lib/supabase', () => ({
   supabase: {
@@ -17,6 +18,7 @@ vi.mock('../../lib/supabase', () => ({
       onAuthStateChange: (...args) => mockOnAuthStateChange(...args),
       signUp: (...args) => mockSignUp(...args),
       signInWithPassword: (...args) => mockSignInWithPassword(...args),
+      signInWithOAuth: (...args) => mockSignInWithOAuth(...args),
       signOut: (...args) => mockSignOut(...args),
       updateUser: (...args) => mockUpdateUser(...args),
       resetPasswordForEmail: (...args) => mockResetPasswordForEmail(...args),
