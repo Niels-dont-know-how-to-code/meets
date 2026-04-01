@@ -16,6 +16,9 @@ import ListOverlay from './components/List/ListOverlay'
 import EventDetailModal from './components/Event/EventDetailModal'
 import HostEventModal from './components/Event/HostEventModal'
 import Toast from './components/Toast'
+import InstallPrompt from './components/InstallPrompt'
+import MapSkeleton from './components/Map/MapSkeleton'
+import { useInstallPrompt } from './hooks/useInstallPrompt'
 
 export default function App() {
   // Auth
@@ -50,6 +53,9 @@ export default function App() {
 
   // Toast notifications
   const { toast, showToast, hideToast } = useToast()
+
+  // PWA install prompt
+  const { showPrompt: showInstallPrompt, install: installApp, dismiss: dismissInstall } = useInstallPrompt()
 
   // UI state
   const [showList, setShowList] = useState(false)
@@ -222,6 +228,9 @@ export default function App() {
         flyTarget={mapFlyTarget}
       />
 
+      {/* Skeleton pins while events are loading */}
+      {eventsLoading && <MapSkeleton />}
+
       {/* Floating controls over the map */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 animate-fade-in flex-shrink-0">
         <DateNavigator selectedDate={selectedDate} onDateChange={handleDateChange} />
@@ -342,6 +351,11 @@ export default function App() {
           updatePassword={updatePassword}
           showToast={showToast}
         />
+      )}
+
+      {/* PWA Install Prompt */}
+      {showInstallPrompt && (
+        <InstallPrompt onInstall={installApp} onDismiss={dismissInstall} />
       )}
 
       {/* Toast notifications */}

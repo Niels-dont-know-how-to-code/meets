@@ -49,7 +49,7 @@ export default function EventMarker({ event, isSelected, onClick }) {
   const bgColor = CATEGORY_COLORS[category] || CATEGORY_COLORS.party
 
   return (
-    <Marker position={position} icon={icon}>
+    <Marker position={position} icon={icon} eventCategory={event.category}>
       <Popup>
         <div
           className="p-4 min-w-[220px] cursor-pointer"

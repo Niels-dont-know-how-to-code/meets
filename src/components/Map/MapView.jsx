@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
+import MarkerClusterGroup from 'react-leaflet-cluster'
+import L from 'leaflet'
 import { MapBoundsTracker } from '../../hooks/useMapBounds'
 import EventMarker from './EventMarker'
-import { DEFAULT_CENTER, DEFAULT_ZOOM } from '../../lib/constants'
+import { DEFAULT_CENTER, DEFAULT_ZOOM, CATEGORY_COLORS } from '../../lib/constants'
 
 /**
  * Inner component that flies the map to a new center whenever the
@@ -60,14 +62,56 @@ export default function MapView({
       <MapRecenter center={center} flyTarget={flyTarget} />
       <MapBoundsTracker onBoundsChange={onBoundsChange} />
 
-      {events.map((event) => (
-        <EventMarker
-          key={event.id}
-          event={event}
-          isSelected={selectedEvent?.id === event.id}
-          onClick={onMarkerClick}
-        />
-      ))}
+      <MarkerClusterGroup
+        chunkedLoading
+        maxClusterRadius={50}
+        spiderfyOnMaxZoom
+        showCoverageOnHover={false}
+        iconCreateFunction={(cluster) => {
+          const children = cluster.getAllChildMarkers()
+          const count = children.length
+
+          // Determine dominant category color
+          const cats = {}
+          children.forEach((m) => {
+            const cat = m.options.eventCategory || 'party'
+            cats[cat] = (cats[cat] || 0) + 1
+          })
+          const dominant = Object.entries(cats).sort((a, b) => b[1] - a[1])[0][0]
+          const color = CATEGORY_COLORS[dominant] || CATEGORY_COLORS.party
+
+          const size = count < 10 ? 36 : count < 50 ? 44 : 52
+
+          return L.divIcon({
+            html: `<div style="
+              background: ${color};
+              width: ${size}px;
+              height: ${size}px;
+              border-radius: 50%;
+              border: 3px solid white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-family: 'Outfit', sans-serif;
+              font-weight: 700;
+              font-size: ${count < 10 ? 14 : 13}px;
+              box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+            ">${count}</div>`,
+            className: '',
+            iconSize: L.point(size, size),
+          })
+        }}
+      >
+        {events.map((event) => (
+          <EventMarker
+            key={event.id}
+            event={event}
+            isSelected={selectedEvent?.id === event.id}
+            onClick={onMarkerClick}
+          />
+        ))}
+      </MarkerClusterGroup>
     </MapContainer>
   )
 }
