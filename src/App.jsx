@@ -304,7 +304,7 @@ export default function App() {
           }}
           onDelete={handleDeleteEvent}
           isInterested={userInterests.has(showEventDetail.id)}
-          interestedCount={showEventDetail.interested_count}
+          interestedCount={events.find(e => e.id === showEventDetail.id)?.interested_count ?? showEventDetail.interested_count}
           onToggleInterest={() => handleToggleInterest(showEventDetail.id)}
           isAdmin={isAdmin}
           showToast={showToast}
