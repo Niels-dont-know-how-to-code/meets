@@ -1,6 +1,14 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+
+// Mock imageUtils to avoid Supabase env dependency
+vi.mock('../../lib/imageUtils', () => ({
+  compressImage: vi.fn(),
+  uploadEventImage: vi.fn(),
+  deleteEventImage: vi.fn(),
+}))
+
 import HostEventModal from '../Event/HostEventModal'
 
 // Mock LocationPicker (path relative to HostEventModal source)

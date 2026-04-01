@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, ImagePlus } from 'lucide-react';
 import { CATEGORIES, CATEGORY_LABELS } from '../../lib/constants';
 import { formatDateForApi } from '../../lib/dateUtils';
 import LocationPicker from '../Map/LocationPicker';
 import TimePicker from './TimePicker';
+import { compressImage } from '../../lib/imageUtils';
 
 export default function HostEventModal({ user, onClose, onSuccess, editingEvent = null }) {
   const todayStr = formatDateForApi(new Date());
@@ -23,6 +24,8 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
 
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(editingEvent?.image_url || null);
 
   useEffect(() => {
     if (editingEvent) {
@@ -59,6 +62,28 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
     }));
   };
 
+  const handleImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setErrors((prev) => ({ ...prev, image: true }));
+      return;
+    }
+
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onload = (ev) => setImagePreview(ev.target.result);
+    reader.readAsDataURL(file);
+    setImageFile(file);
+    if (errors.image) setErrors((prev) => ({ ...prev, image: false }));
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(editingEvent?.image_url || null);
+  };
+
   const validate = () => {
     const newErrors = {};
     if (!form.title.trim()) newErrors.title = true;
@@ -82,7 +107,7 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
 
     setSubmitting(true);
     try {
-      await onSuccess(form);
+      await onSuccess({ ...form, _imageFile: imageFile, _existingImageUrl: editingEvent?.image_url || null });
     } catch {
       // error handled by parent
     } finally {
@@ -221,6 +246,36 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
                 rows={3}
                 className={`${inputClass('description')} resize-none`}
               />
+            </div>
+
+            {/* Event Image */}
+            <div>
+              <label className="block font-display text-sm font-medium text-ink mb-1">
+                Event Image
+              </label>
+              {imagePreview ? (
+                <div className="relative rounded-xl overflow-hidden">
+                  <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover" />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-32 rounded-xl border-2 border-dashed border-gray-200 hover:border-meets-300 bg-surface-secondary cursor-pointer transition-colors">
+                  <ImagePlus size={24} className="text-ink-tertiary mb-1" />
+                  <span className="text-sm text-ink-tertiary font-body">Add a photo</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </label>
+              )}
             </div>
 
             {/* Location */}

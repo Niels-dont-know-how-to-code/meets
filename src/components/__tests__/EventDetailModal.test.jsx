@@ -22,6 +22,10 @@ vi.mock('../../lib/dateUtils', () => ({
   isHappeningNow: () => false,
 }))
 
+vi.mock('../../lib/calendarUtils', () => ({
+  buildGoogleCalendarUrl: (event) => `https://www.google.com/calendar/render?text=${encodeURIComponent(event.title || '')}`,
+}))
+
 const baseEvent = {
   id: 'evt-1',
   title: 'Chess Night',
@@ -37,6 +41,7 @@ const baseEvent = {
   creator_username: 'niels',
   created_by_id: 'user-1',
   interested_count: 5,
+  image_url: null,
 }
 
 describe('EventDetailModal', () => {
@@ -158,5 +163,80 @@ describe('EventDetailModal', () => {
     const link = screen.getByText('Oude Markt, Leuven').closest('a')
     expect(link).toHaveAttribute('href', expect.stringContaining('google.com/maps'))
     expect(link).toHaveAttribute('target', '_blank')
+  })
+
+  it('renders event image when image_url is present', () => {
+    const eventWithImage = { ...baseEvent, image_url: 'https://example.com/photo.jpg' }
+    render(<EventDetailModal {...defaultProps} event={eventWithImage} />)
+
+    const img = screen.getByAltText('Chess Night')
+    expect(img).toBeInTheDocument()
+    expect(img).toHaveAttribute('src', 'https://example.com/photo.jpg')
+  })
+
+  it('does not render image when image_url is null', () => {
+    render(<EventDetailModal {...defaultProps} />)
+
+    expect(screen.queryByAltText('Chess Night')).not.toBeInTheDocument()
+  })
+
+  it('renders Calendar link with correct Google Calendar URL', () => {
+    render(<EventDetailModal {...defaultProps} />)
+
+    const calendarLink = screen.getByText('Calendar').closest('a')
+    expect(calendarLink).toHaveAttribute('href', expect.stringContaining('google.com/calendar/render'))
+    expect(calendarLink).toHaveAttribute('target', '_blank')
+  })
+
+  it('renders Report button for non-owner authenticated users', () => {
+    render(<EventDetailModal {...defaultProps} user={{ id: 'other-user' }} hasReported={false} />)
+
+    expect(screen.getByText('Report')).toBeInTheDocument()
+  })
+
+  it('does not render Report button for event owner', () => {
+    render(<EventDetailModal {...defaultProps} user={{ id: 'user-1' }} />)
+
+    expect(screen.queryByText('Report')).not.toBeInTheDocument()
+  })
+
+  it('does not render Report button when not logged in', () => {
+    render(<EventDetailModal {...defaultProps} user={null} />)
+
+    expect(screen.queryByText('Report')).not.toBeInTheDocument()
+  })
+
+  it('shows report reasons menu when Report is clicked', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <EventDetailModal
+        {...defaultProps}
+        user={{ id: 'other-user' }}
+        onReport={vi.fn()}
+        hasReported={false}
+      />
+    )
+
+    await user.click(screen.getByText('Report'))
+
+    expect(screen.getByText('Why are you reporting this?')).toBeInTheDocument()
+    expect(screen.getByText('Spam')).toBeInTheDocument()
+    expect(screen.getByText('Inappropriate content')).toBeInTheDocument()
+    expect(screen.getByText('Misleading information')).toBeInTheDocument()
+    expect(screen.getByText('Other')).toBeInTheDocument()
+  })
+
+  it('shows "Reported" state when hasReported is true', () => {
+    render(
+      <EventDetailModal
+        {...defaultProps}
+        user={{ id: 'other-user' }}
+        hasReported={true}
+      />
+    )
+
+    expect(screen.getByText('Reported')).toBeInTheDocument()
+    expect(screen.queryByText('Report')).not.toBeInTheDocument()
   })
 })

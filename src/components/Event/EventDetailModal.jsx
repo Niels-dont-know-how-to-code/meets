@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { X, MapPin, Clock, User, Pencil, Trash2, Calendar, ExternalLink, Share2 } from 'lucide-react';
+import { X, MapPin, Clock, User, Pencil, Trash2, Calendar, ExternalLink, Share2, CalendarPlus, Flag } from 'lucide-react';
 import { formatTime, formatDate, isHappeningNow } from '../../lib/dateUtils';
+import { buildGoogleCalendarUrl } from '../../lib/calendarUtils';
 import CategoryBadge from './CategoryBadge';
 import InterestedButton from './InterestedButton';
 
@@ -15,8 +16,12 @@ export default function EventDetailModal({
   onToggleInterest,
   isAdmin,
   showToast,
+  onReport,
+  hasReported,
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showReportMenu, setShowReportMenu] = useState(false)
+  const [reportSubmitting, setReportSubmitting] = useState(false)
 
   if (!event) return null;
 
@@ -30,6 +35,21 @@ export default function EventDetailModal({
     }
     onDelete(event.id);
   };
+
+  const REPORT_REASONS = ['Spam', 'Inappropriate content', 'Misleading information', 'Other']
+
+  const handleReport = async (reason) => {
+    if (!onReport) return
+    setReportSubmitting(true)
+    const result = await onReport(event.id, reason)
+    setReportSubmitting(false)
+    setShowReportMenu(false)
+    if (result?.error) {
+      showToast?.(result.error.message, 'error')
+    } else {
+      showToast?.('Event reported. Thank you for helping keep Meets safe.')
+    }
+  }
 
   const handleShare = async () => {
     const url = `${window.location.origin}${window.location.pathname}?event=${event.id}`
@@ -70,6 +90,13 @@ export default function EventDetailModal({
         </button>
 
         <div className="p-6 pt-8">
+          {/* Event Image */}
+          {event.image_url && (
+            <div className="-mx-6 -mt-8 mb-4">
+              <img src={event.image_url} alt={event.title} className="w-full h-48 md:h-56 object-cover" />
+            </div>
+          )}
+
           {/* Title */}
           <h2 className="font-display text-2xl font-bold text-ink pr-8">
             {event.title}
@@ -143,7 +170,7 @@ export default function EventDetailModal({
             Created by {event.creator_username || 'Anonymous'}
           </p>
 
-          {/* Interested + Share */}
+          {/* Interested + Share + Report */}
           <div className="mt-5 flex items-center gap-3">
             <InterestedButton
               count={interestedCount}
@@ -160,7 +187,52 @@ export default function EventDetailModal({
               <Share2 size={16} />
               Share
             </button>
+            <a
+              href={buildGoogleCalendarUrl(event)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full
+                bg-surface-secondary hover:bg-gray-100 text-ink-secondary
+                text-sm font-display font-medium transition-colors"
+            >
+              <CalendarPlus size={16} />
+              Calendar
+            </a>
+            {user && !canManage && (
+              <button
+                onClick={() => setShowReportMenu(prev => !prev)}
+                disabled={hasReported}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-display font-medium transition-colors ${
+                  hasReported
+                    ? 'bg-red-50 text-red-400 cursor-not-allowed'
+                    : 'bg-surface-secondary hover:bg-red-50 text-ink-secondary hover:text-red-500'
+                }`}
+              >
+                <Flag size={16} />
+                {hasReported ? 'Reported' : 'Report'}
+              </button>
+            )}
           </div>
+
+          {/* Report menu */}
+          {showReportMenu && !hasReported && (
+            <div className="mt-3 p-3 rounded-xl bg-red-50 border border-red-100 animate-fade-in">
+              <p className="font-display text-sm font-medium text-red-700 mb-2">Why are you reporting this?</p>
+              <div className="flex flex-wrap gap-2">
+                {REPORT_REASONS.map((reason) => (
+                  <button
+                    key={reason}
+                    onClick={() => handleReport(reason)}
+                    disabled={reportSubmitting}
+                    className="px-3 py-1.5 rounded-lg bg-white border border-red-200 text-sm font-body
+                      text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Manage buttons */}
           {canManage && (

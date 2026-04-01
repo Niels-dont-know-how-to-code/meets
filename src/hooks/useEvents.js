@@ -36,7 +36,9 @@ export function useEvents(selectedDate) {
       if (rpcError) throw rpcError
       if (currentId !== fetchIdRef.current) return // stale request, discard
 
-      setEvents(data || [])
+      // Filter out events with 3+ reports (auto-hide flagged content)
+      const filtered = (data || []).filter(e => (e.report_count ?? 0) < 3)
+      setEvents(filtered)
 
       // Fetch user interests if authenticated
       const {

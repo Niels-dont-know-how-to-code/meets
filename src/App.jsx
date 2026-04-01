@@ -5,6 +5,7 @@ import ProfileSettingsModal from './components/Auth/ProfileSettingsModal'
 import { useGeolocation } from './hooks/useGeolocation'
 import { useEvents } from './hooks/useEvents'
 import { useToast } from './hooks/useToast'
+import { useReports } from './hooks/useReports'
 import { DEFAULT_ZOOM } from './lib/constants'
 import MapView from './components/Map/MapView'
 import DateNavigator from './components/Layout/DateNavigator'
@@ -16,6 +17,7 @@ import ListOverlay from './components/List/ListOverlay'
 import EventDetailModal from './components/Event/EventDetailModal'
 import HostEventModal from './components/Event/HostEventModal'
 import Toast from './components/Toast'
+import { uploadEventImage, deleteEventImage } from './lib/imageUtils'
 import InstallPrompt from './components/InstallPrompt'
 import MapSkeleton from './components/Map/MapSkeleton'
 import { useInstallPrompt } from './hooks/useInstallPrompt'
@@ -54,6 +56,9 @@ export default function App() {
   // Toast notifications
   const { toast, showToast, hideToast } = useToast()
 
+  // Reports
+  const { userReports, fetchUserReports, reportEvent } = useReports()
+
   // PWA install prompt
   const { showPrompt: showInstallPrompt, install: installApp, dismiss: dismissInstall } = useInstallPrompt()
 
@@ -79,6 +84,13 @@ export default function App() {
       setPendingEventId(eventId)
     }
   }, [])
+
+  // Fetch user reports when authenticated
+  useEffect(() => {
+    if (user) {
+      fetchUserReports(user.id)
+    }
+  }, [user, fetchUserReports])
 
   // Open shared event once events are loaded
   useEffect(() => {
@@ -157,14 +169,27 @@ export default function App() {
 
   const handleCreateEvent = async (eventData) => {
     try {
+      const { _imageFile, _existingImageUrl, ...fields } = eventData
       const payload = {
-        ...eventData,
+        ...fields,
         created_by_id: user.id,
-        start_time: eventData.start_time?.length === 5 ? eventData.start_time + ':00' : eventData.start_time,
-        end_time: eventData.end_time?.length === 5 ? eventData.end_time + ':00' : eventData.end_time,
+        start_time: fields.start_time?.length === 5 ? fields.start_time + ':00' : fields.start_time,
+        end_time: fields.end_time?.length === 5 ? fields.end_time + ':00' : fields.end_time,
       }
-      const { error: err } = await createEvent(payload)
+      const { data, error: err } = await createEvent(payload)
       if (err) throw err
+
+      // Upload image after event is created (need the event ID)
+      if (_imageFile && data?.id) {
+        try {
+          const imageUrl = await uploadEventImage(_imageFile, data.id)
+          await updateEvent(data.id, { image_url: imageUrl })
+        } catch (imgErr) {
+          console.error('Image upload failed:', imgErr)
+          // Event still created, just without image
+        }
+      }
+
       setShowHostForm(false)
       refreshEvents()
       showToast('Event created!')
@@ -176,11 +201,27 @@ export default function App() {
 
   const handleUpdateEvent = async (eventData) => {
     try {
+      const { _imageFile, _existingImageUrl, ...fields } = eventData
       const payload = {
-        ...eventData,
-        start_time: eventData.start_time?.length === 5 ? eventData.start_time + ':00' : eventData.start_time,
-        end_time: eventData.end_time?.length === 5 ? eventData.end_time + ':00' : eventData.end_time,
+        ...fields,
+        start_time: fields.start_time?.length === 5 ? fields.start_time + ':00' : fields.start_time,
+        end_time: fields.end_time?.length === 5 ? fields.end_time + ':00' : fields.end_time,
       }
+
+      // Handle image upload/change
+      if (_imageFile) {
+        try {
+          const imageUrl = await uploadEventImage(_imageFile, editingEvent.id)
+          payload.image_url = imageUrl
+          // Delete old image if replacing
+          if (_existingImageUrl) {
+            deleteEventImage(_existingImageUrl)
+          }
+        } catch (imgErr) {
+          console.error('Image upload failed:', imgErr)
+        }
+      }
+
       const { error: err } = await updateEvent(editingEvent.id, payload)
       if (err) throw err
       setShowHostForm(false)
@@ -203,6 +244,14 @@ export default function App() {
     setShowEventDetail(null)
     refreshEvents()
     showToast('Event deleted')
+  }
+
+  const handleReportEvent = async (eventId, reason) => {
+    if (!user) {
+      openAuthModal('login')
+      return
+    }
+    return reportEvent(eventId, user.id, reason)
   }
 
   const handleToggleInterest = (eventId) => {
@@ -317,6 +366,8 @@ export default function App() {
           onToggleInterest={() => handleToggleInterest(showEventDetail.id)}
           isAdmin={isAdmin}
           showToast={showToast}
+          onReport={handleReportEvent}
+          hasReported={userReports.has(showEventDetail.id)}
         />
       )}
 

@@ -15,6 +15,11 @@ export default function EventCard({ event, onClick, compact = false, index, isIn
       } ${index !== undefined ? 'animate-stagger-in' : ''}`}
       style={index !== undefined ? { animationDelay: `${index * 60}ms` } : undefined}
     >
+      {!compact && event.image_url && (
+        <div className="-mx-4 -mt-4 mb-3 rounded-t-xl overflow-hidden">
+          <img src={event.image_url} alt="" className="w-full h-32 object-cover" />
+        </div>
+      )}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
