@@ -37,9 +37,21 @@ Tracking remaining feature phases. Check off items as they are completed.
 - [ ] Haptic feedback on mobile interactions (navigator.vibrate)
 
 ### Phase 6 — Discovery & Search
-- [ ] Search by location area (draw/radius on map)
+- [ ] **50km radius filter:** List view only shows events within 50km of user's geolocation. Scrolling the list does NOT expand beyond this — only map panning changes the map view. The list always stays geo-anchored to your location (or searched city)
+- [ ] **City search/switcher:** Users can search for a different city (e.g., search "Leuven" while in Brussels) and the list + map re-center to show events in that city's 50km radius. Could be a dropdown of Belgian cities or a free-text search
 - [ ] Date range view (see events across multiple days)
 - [ ] Trending/popular events section
+
+---
+
+## Future Vision (not yet planned)
+
+These are ideas to build towards — no implementation plan yet.
+
+- **Verified student organizations:** A way to verify real student verenigingen so only legitimate orgs can post. Prevents fake events. Could be admin-verified badges or a registration/approval flow
+- **Follow your vereniging:** Students follow their own student organization to see their events surfaced. Ties into the organizer profiles from Phase 4
+- **Friends & social:** See where friends are going (which events they're interested in). Social discovery layer
+- **Shareable event links:** ✅ Already implemented — Share button generates `?event=<id>` URLs
 
 ---
 
