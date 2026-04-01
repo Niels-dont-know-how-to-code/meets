@@ -61,7 +61,7 @@ END $$;
 
 -- Interests policies
 DO $$ BEGIN
-CREATE POLICY "interests_select" ON public.interests FOR SELECT USING (true);
+CREATE POLICY "interests_select" ON public.interests FOR SELECT TO authenticated USING (user_id = auth.uid());
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 

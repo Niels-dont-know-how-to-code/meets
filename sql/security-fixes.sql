@@ -1,14 +1,14 @@
 -- Security fixes for Meets app
 -- Run this in Supabase SQL Editor (Dashboard > SQL Editor > New Query)
 
--- 1. Rate limiting: max 10 events per user per day
+-- 1. Rate limiting: max 5 events per user per day
 CREATE OR REPLACE FUNCTION check_event_limit()
 RETURNS TRIGGER AS $$
 BEGIN
   IF (SELECT COUNT(*) FROM public.events
       WHERE created_by_id = NEW.created_by_id
-      AND created_at > now() - interval '24 hours') >= 10 THEN
-    RAISE EXCEPTION 'Event creation limit reached (max 10 per day)';
+      AND created_at > now() - interval '24 hours') >= 5 THEN
+    RAISE EXCEPTION 'Event creation limit reached (max 5 per day)';
   END IF;
   RETURN NEW;
 END;
@@ -68,7 +68,7 @@ CREATE POLICY "Only admins can view audit log"
   TO authenticated
   USING ((auth.jwt()->'app_metadata'->>'role') = 'admin');
 
-CREATE POLICY "System can insert audit log"
+CREATE POLICY "Admins can insert audit log"
   ON public.audit_log FOR INSERT
   TO authenticated
-  WITH CHECK (true);
+  WITH CHECK (admin_id = auth.uid() AND (auth.jwt()->'app_metadata'->>'role') = 'admin');

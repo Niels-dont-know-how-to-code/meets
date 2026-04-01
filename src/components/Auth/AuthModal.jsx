@@ -105,10 +105,8 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
       if (signInError) {
         if (signInError.message.includes('Email not confirmed')) {
           setError('Please check your email and click the confirmation link first')
-        } else if (signInError.message.includes('Invalid login credentials')) {
-          setError('Wrong email or password')
         } else {
-          setError(signInError.message)
+          setError('Invalid email or password')
         }
         return
       }
