@@ -56,7 +56,14 @@ export default function EventCard({ event, onClick, compact = false, index, isIn
           </div>
         </div>
 
-        <div className="pt-5">
+        <div className="flex flex-col items-end gap-2 pt-5">
+          {event.image_url && (
+            <img
+              src={event.image_url}
+              alt=""
+              className="w-8 h-8 rounded-lg object-cover"
+            />
+          )}
           <InterestedButton
             count={event.interested_count ?? 0}
             isInterested={isInterested}

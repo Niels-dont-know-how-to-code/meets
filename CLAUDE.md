@@ -29,10 +29,13 @@ A Waze-inspired web app where students can discover and host local events on an 
 - **Project ref:** `oosnzahggbgwgtppurqz`
 - **Auth:** Email/Password with email confirmation (Supabase sends confirmation emails automatically)
 - **Tables:**
-  - `events` — id, title, description, date, start_time (timetz), end_time (timetz), lat, lng, address_label, category, organizer_name, created_by_id, created_at
+  - `events` — id, title, description, date, start_time (timetz), end_time (timetz), lat, lng, address_label, category, organizer_name, created_by_id, created_at, image_url
   - `interests` — id, user_id, event_id, created_at (UNIQUE user_id+event_id)
-- **RLS:** Public read for events/interests. Auth users create events. Owners + admins can update/delete. Auth users insert/delete own interests.
-- **RPC:** `get_events_with_details(target_date date)` — joins events with interest counts + creator display name
+  - `reports` — id, event_id, reporter_id, reason (max 500 chars), created_at (UNIQUE event_id+reporter_id)
+- **RLS:** Public read for events/interests. Auth users create events (max 5/day via trigger). Owners + admins can update/delete. Auth users insert/delete own interests. Reports: auth insert own, admin select/delete.
+- **RPC:** `get_events_with_details(target_date date)` — joins events with interest counts + creator display name + image_url + report_count. Auto-hides events with 3+ reports.
+- **Storage:** `event-images` bucket (public read, auth upload, owner delete)
+- **Rate limit:** `check_event_limit()` trigger — max 5 events per user per 24h
 - **Admin role:** Assign via SQL: `UPDATE auth.users SET raw_app_meta_data = raw_app_meta_data || '{"role":"admin"}' WHERE id = '<uuid>';`
 
 ## Architecture
@@ -55,15 +58,15 @@ src/
     dateUtils.js                   ← date-fns helpers (formatTime, formatDate, etc.)
     geocoding.js                   ← Nominatim address search
   hooks/
-    useAuth.js                     ← Email/password auth (signUp, signIn, signOut, displayName, isAdmin)
-    useEvents.js                   ← Supabase CRUD + interest toggle + fetch by date
+    useAuth.js                     ← Email/password auth (signUp, signIn, signOut, resetPassword, changePassword, updateDisplayName, displayName, avatarUrl, isAdmin)
+    useEvents.js                   ← Supabase CRUD + interest toggle + fetch by date (with stale-request guard via fetchIdRef)
     useGeolocation.js              ← Browser geolocation with Leuven fallback
     useMapBounds.js                ← Track visible map bounds
     useToast.js                    ← Toast notification state
   components/
     Auth/
-      AuthModal.jsx                ← Sign Up / Log In modal with tabs, email confirmation message
-      LoginButton.jsx              ← Floating login button / user avatar
+      AuthModal.jsx                ← Sign Up / Log In / Forgot Password modal with tabs, email confirmation message
+      LoginButton.jsx              ← User dropdown (avatar + Settings + Logout) or Login button
       AuthGuard.jsx                ← Conditional render based on auth state
     Map/
       MapView.jsx                  ← Full-screen Leaflet map
@@ -81,7 +84,8 @@ src/
       SkeletonCard.jsx             ← Loading placeholder card
     Event/
       EventDetailModal.jsx         ← Full event detail + edit/delete for owner/admin
-      HostEventModal.jsx           ← Create/edit form with all fields + LocationPicker
+      HostEventModal.jsx           ← Create/edit form with all fields + LocationPicker + TimePicker
+      TimePicker.jsx               ← Custom time picker component (replaces native time input)
       CategoryBadge.jsx            ← Colored category pill
       InterestedButton.jsx         ← Heart toggle with count
     Toast.jsx                      ← Toast notification (success/error, auto-dismiss)
@@ -93,12 +97,26 @@ src/
 - **Markers:** Custom L.divIcon with inline SVG icons, category colors, CSS pointer triangle.
 - **Auth gating:** When user tries to create event or heart without being logged in, the auth modal opens.
 - **Toast notifications:** showToast('message', 'success'|'error') from useToast hook.
+- **Display name fallback:** RPC uses: display_name → user_name → email prefix.
+- **isHappeningNow():** Compares current time against event start/end times to show "LIVE" badge.
+- **Stale request guard:** useEvents uses fetchIdRef to discard responses from outdated date fetches.
+
+## Key Features
+- **Auth:** Email/password signup with email confirmation, forgot password flow, change password, change display name
+- **Map:** CartoDB Voyager tiles (Waze-like), category-colored markers, geolocation, bounds tracking
+- **Events:** CRUD with Nominatim geocoding, custom TimePicker, category filter chips, "LIVE" badge for ongoing events
+- **Social:** Heart/interested toggle with optimistic updates, share event link (Google Maps directions)
+- **List:** Search, "All Events" / "My Interests" tabs, loading skeletons, stagger animations
+- **UI:** User dropdown with Settings + Logout, toast notifications, empty states, pull-to-refresh cue
+- **Security:** RLS, rate limiting (5 events/day), input length constraints, auto-hide reported events (3+ reports)
+- **Error handling:** React ErrorBoundary, stale request guards, optimistic rollbacks
 
 ## Known Limitations (V1)
-- No event images
+- No event image upload yet (backend ready: image_url column + event-images storage bucket)
+- No report/flag UI yet (backend ready: reports table + RLS)
+- No GDPR cookie consent banner yet (legally required for Belgium)
 - No Supabase Realtime — manual refresh only
-- No password reset flow yet
-- No social login (removed GitHub OAuth in favor of email/password)
+- No social login (Google/Facebook — need developer accounts)
 - Categories are hardcoded (party, culture, sports)
 - No map clustering for many events
 

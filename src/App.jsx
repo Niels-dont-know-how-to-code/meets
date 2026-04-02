@@ -16,6 +16,7 @@ import ListOverlay from './components/List/ListOverlay'
 import EventDetailModal from './components/Event/EventDetailModal'
 import HostEventModal from './components/Event/HostEventModal'
 import Toast from './components/Toast'
+import CookieConsent from './components/CookieConsent'
 
 export default function App() {
   // Auth
@@ -354,6 +355,9 @@ export default function App() {
           onClose={hideToast}
         />
       )}
+
+      {/* Cookie consent banner */}
+      <CookieConsent />
 
       {/* Loading overlay */}
       {(authLoading || geoLoading) && (

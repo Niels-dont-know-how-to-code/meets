@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { X, MapPin, Clock, User, Pencil, Trash2, Calendar, ExternalLink, Share2 } from 'lucide-react';
+import { X, MapPin, Clock, User, Pencil, Trash2, Calendar, ExternalLink, Share2, Flag } from 'lucide-react';
 import { formatTime, formatDate, isHappeningNow } from '../../lib/dateUtils';
+import { supabase } from '../../lib/supabase';
 import CategoryBadge from './CategoryBadge';
 import InterestedButton from './InterestedButton';
 
@@ -17,6 +18,11 @@ export default function EventDetailModal({
   showToast,
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportCustomReason, setReportCustomReason] = useState('');
+  const [reportStatus, setReportStatus] = useState(null); // 'success' | 'duplicate' | 'error'
+  const [reportSubmitting, setReportSubmitting] = useState(false);
 
   if (!event) return null;
 
@@ -29,6 +35,32 @@ export default function EventDetailModal({
       return;
     }
     onDelete(event.id);
+  };
+
+  const handleReport = async () => {
+    const reason = reportReason === 'Other' ? reportCustomReason.trim() : reportReason;
+    if (!reason) return;
+    setReportSubmitting(true);
+    try {
+      const { error: err } = await supabase.from('reports').insert({
+        event_id: event.id,
+        reporter_id: user.id,
+        reason,
+      });
+      if (err) {
+        if (err.code === '23505') {
+          setReportStatus('duplicate');
+        } else {
+          throw err;
+        }
+      } else {
+        setReportStatus('success');
+      }
+    } catch {
+      setReportStatus('error');
+    } finally {
+      setReportSubmitting(false);
+    }
   };
 
   const handleShare = async () => {
@@ -60,16 +92,36 @@ export default function EventDetailModal({
         className="relative w-full md:max-w-lg md:rounded-2xl rounded-t-3xl bg-white
           max-h-[90vh] md:max-h-[85vh] overflow-y-auto animate-slide-up shadow-overlay"
       >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-surface-secondary
-            transition-colors text-ink-secondary z-10"
-        >
-          <X size={20} />
-        </button>
+        {/* Close button + Report button */}
+        <div className="absolute top-4 right-4 flex items-center gap-1 z-10">
+          {user && !isCreator && (
+            <button
+              onClick={() => setShowReportForm((v) => !v)}
+              className="p-1.5 rounded-full hover:bg-surface-secondary transition-colors text-ink-secondary"
+              title="Report event"
+            >
+              <Flag size={18} />
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full hover:bg-surface-secondary
+              transition-colors text-ink-secondary"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
-        <div className="p-6 pt-8">
+        {/* Event image */}
+        {event.image_url && (
+          <img
+            src={event.image_url}
+            alt={event.title}
+            className="w-full h-48 object-cover rounded-t-2xl"
+          />
+        )}
+
+        <div className={`p-6 ${event.image_url ? 'pt-4' : 'pt-8'}`}>
           {/* Title */}
           <h2 className="font-display text-2xl font-bold text-ink pr-8">
             {event.title}
@@ -86,6 +138,51 @@ export default function EventDetailModal({
               </span>
             )}
           </div>
+
+          {/* Report form (inline) */}
+          {showReportForm && (
+            <div className="mt-3 p-3 bg-surface-secondary rounded-xl">
+              {reportStatus === 'success' ? (
+                <p className="text-sm font-body text-green-600">Report submitted. Thank you.</p>
+              ) : reportStatus === 'duplicate' ? (
+                <p className="text-sm font-body text-amber-600">You already reported this event.</p>
+              ) : reportStatus === 'error' ? (
+                <p className="text-sm font-body text-red-500">Something went wrong. Please try again.</p>
+              ) : (
+                <>
+                  <p className="text-sm font-display font-medium text-ink mb-2">Report this event</p>
+                  <select
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    className="w-full text-sm font-body border border-gray-200 rounded-lg px-3 py-2 mb-2 bg-white"
+                  >
+                    <option value="">Select a reason...</option>
+                    <option value="Spam">Spam</option>
+                    <option value="Inappropriate content">Inappropriate content</option>
+                    <option value="Misleading information">Misleading information</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  {reportReason === 'Other' && (
+                    <input
+                      type="text"
+                      value={reportCustomReason}
+                      onChange={(e) => setReportCustomReason(e.target.value.slice(0, 500))}
+                      placeholder="Describe the issue..."
+                      maxLength={500}
+                      className="w-full text-sm font-body border border-gray-200 rounded-lg px-3 py-2 mb-2 bg-white"
+                    />
+                  )}
+                  <button
+                    onClick={handleReport}
+                    disabled={reportSubmitting || (!reportReason || (reportReason === 'Other' && !reportCustomReason.trim()))}
+                    className="btn-primary text-sm px-4 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {reportSubmitting ? 'Submitting...' : 'Submit Report'}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Details */}
           <div className="mt-5 space-y-3">
