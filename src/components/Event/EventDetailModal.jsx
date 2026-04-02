@@ -139,6 +139,12 @@ export default function EventDetailModal({
                 Live
               </span>
             )}
+            {event.visibility === 'friends' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+                bg-purple-100 text-purple-600 text-[10px] font-display font-bold uppercase tracking-wider">
+                Friends only
+              </span>
+            )}
           </div>
 
           {/* Report form (inline) */}

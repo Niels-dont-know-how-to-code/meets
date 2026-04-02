@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Search, MapPin, Users, Calendar, X } from 'lucide-react';
+import { Search, MapPin, Users, Calendar, X, Star, BadgeCheck } from 'lucide-react';
 import { searchAddress } from '../../lib/geocoding';
 
 export default function UnifiedSearchBar({
@@ -10,34 +10,42 @@ export default function UnifiedSearchBar({
   onFriendClick,
   events = [],
   onEventClick,
+  searchOrganisers,
+  onOrganizerClick,
 }) {
   const [focused, setFocused] = useState(false);
   const [places, setPlaces] = useState([]);
+  const [organisers, setOrganisers] = useState([]);
   const [searchingPlaces, setSearchingPlaces] = useState(false);
   const debounceRef = useRef(null);
   const containerRef = useRef(null);
 
   const query = value?.trim().toLowerCase() || '';
 
-  // Debounced place search when query is 3+ chars
+  // Debounced place + organiser search when query is 3+ chars
   useEffect(() => {
     if (query.length < 3) {
       setPlaces([]);
+      setOrganisers([]);
       return;
     }
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       setSearchingPlaces(true);
-      const results = await searchAddress(query);
-      setPlaces(results.slice(0, 3));
+      const [placeResults, orgResults] = await Promise.all([
+        searchAddress(query),
+        searchOrganisers ? searchOrganisers(query) : [],
+      ]);
+      setPlaces(placeResults.slice(0, 3));
+      setOrganisers(orgResults || []);
       setSearchingPlaces(false);
     }, 600);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query]);
+  }, [query, searchOrganisers]);
 
   // Filter friends by query
   const matchedFriends = query.length >= 2
@@ -54,7 +62,7 @@ export default function UnifiedSearchBar({
       ).slice(0, 4)
     : [];
 
-  const hasResults = matchedEvents.length > 0 || matchedFriends.length > 0 || places.length > 0;
+  const hasResults = matchedEvents.length > 0 || matchedFriends.length > 0 || places.length > 0 || organisers.length > 0;
   const showDropdown = focused && query.length >= 2 && (hasResults || searchingPlaces);
 
   const handlePlaceClick = (place) => {
@@ -75,6 +83,12 @@ export default function UnifiedSearchBar({
 
   const handleFriendClick = (friend) => {
     onFriendClick?.(friend);
+    onChange('');
+    setFocused(false);
+  };
+
+  const handleOrganiserClick = (organiser) => {
+    onOrganizerClick?.(organiser.id);
     onChange('');
     setFocused(false);
   };
@@ -191,8 +205,38 @@ export default function UnifiedSearchBar({
             </div>
           )}
 
+          {/* Organiser results */}
+          {organisers.length > 0 && (
+            <div>
+              <div className="px-3 py-1.5 text-[10px] font-display font-bold text-ink-tertiary uppercase tracking-wider bg-gray-50">
+                Organisers
+              </div>
+              {organisers.map((org) => (
+                <button
+                  key={org.id}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleOrganiserClick(org)}
+                  className="w-full text-left px-3 py-2 hover:bg-surface-secondary transition-colors flex items-center gap-2"
+                >
+                  {org.avatar_url ? (
+                    <img src={org.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <Star size={14} className="text-amber-500 flex-shrink-0" />
+                  )}
+                  <span className="text-sm font-body text-ink truncate flex items-center gap-1">
+                    {org.display_name}
+                    {org.is_verified && <BadgeCheck size={12} className="text-meets-500" />}
+                  </span>
+                  <span className="ml-auto text-[10px] text-ink-tertiary font-body whitespace-nowrap">
+                    {org.follower_count} followers
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Searching indicator */}
-          {searchingPlaces && places.length === 0 && matchedEvents.length === 0 && matchedFriends.length === 0 && (
+          {searchingPlaces && places.length === 0 && matchedEvents.length === 0 && matchedFriends.length === 0 && organisers.length === 0 && (
             <div className="px-3 py-3 text-center">
               <span className="text-xs font-body text-ink-tertiary">Searching...</span>
             </div>

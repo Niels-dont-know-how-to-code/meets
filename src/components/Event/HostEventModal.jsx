@@ -5,7 +5,7 @@ import { formatDateForApi } from '../../lib/dateUtils';
 import LocationPicker from '../Map/LocationPicker';
 import TimePicker from './TimePicker';
 
-export default function HostEventModal({ user, onClose, onSuccess, editingEvent = null }) {
+export default function HostEventModal({ user, onClose, onSuccess, editingEvent = null, isOrganiser = false }) {
   const todayStr = formatDateForApi(new Date());
 
   const [form, setForm] = useState({
@@ -19,6 +19,7 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
     lat: null,
     lng: null,
     address_label: '',
+    visibility: isOrganiser ? 'public' : 'friends',
   });
 
   const [errors, setErrors] = useState({});
@@ -39,6 +40,7 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
         lat: editingEvent.lat ?? null,
         lng: editingEvent.lng ?? null,
         address_label: editingEvent.address_label || '',
+        visibility: editingEvent.visibility || (isOrganiser ? 'public' : 'friends'),
       });
     }
   }, [editingEvent]);
@@ -193,6 +195,40 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Visibility */}
+            <div>
+              <label className="block font-display text-sm font-medium text-ink mb-1">
+                Who can see this?
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => !isOrganiser && updateField('visibility', 'friends')}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-display font-semibold transition-all border ${
+                    form.visibility === 'friends'
+                      ? 'bg-meets-50 text-meets-600 border-meets-200'
+                      : 'bg-surface-secondary text-ink-secondary border-transparent hover:border-gray-200'
+                  } ${isOrganiser ? 'opacity-40 cursor-not-allowed' : ''}`}
+                >
+                  Friends Only
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateField('visibility', 'public')}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-display font-semibold transition-all border ${
+                    form.visibility === 'public'
+                      ? 'bg-meets-50 text-meets-600 border-meets-200'
+                      : 'bg-surface-secondary text-ink-secondary border-transparent hover:border-gray-200'
+                  }`}
+                >
+                  Public
+                </button>
+              </div>
+              {isOrganiser && (
+                <p className="text-[11px] text-ink-tertiary font-body mt-1">Organiser events are always public</p>
+              )}
             </div>
 
             {/* Organizer Name */}

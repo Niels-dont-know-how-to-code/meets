@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, MapPin, RefreshCw, Calendar, Heart, Search, Plus } from 'lucide-react';
+import { X, MapPin, RefreshCw, Calendar, Heart, Search, Plus, Users } from 'lucide-react';
 import UnifiedSearchBar from './UnifiedSearchBar';
 import ListTabs from './ListTabs';
 import EventCard from './EventCard';
@@ -26,6 +26,9 @@ export default function ListOverlay({
   friends,
   onPlaceSelect,
   onFriendClick,
+  followedIds,
+  searchOrganisers,
+  onOrganizerClick,
 }) {
   // Pull-to-refresh state
   const [pullDistance, setPullDistance] = useState(0);
@@ -87,9 +90,11 @@ export default function ListOverlay({
     );
   }
 
-  // Filter by interests tab
+  // Filter by tab
   if (activeTab === 'interests') {
     filtered = filtered.filter((e) => userInterests.has(e.id));
+  } else if (activeTab === 'following') {
+    filtered = filtered.filter((e) => followedIds?.has(e.created_by_id));
   }
 
   // Sort by start_time ascending
@@ -107,6 +112,16 @@ export default function ListOverlay({
           <Search size={40} className="mb-3 opacity-50" aria-hidden="true" />
           <p className="font-body text-sm font-medium">No matches for &apos;{searchQuery}&apos;</p>
           <p className="font-body text-xs mt-1 opacity-70">Try a different search term</p>
+        </div>
+      );
+    }
+
+    if (activeTab === 'following') {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 text-ink-tertiary">
+          <Users size={40} className="mb-3 opacity-50" aria-hidden="true" />
+          <p className="font-body text-sm font-medium">No events from followed organisers</p>
+          <p className="font-body text-xs mt-1 opacity-70">Follow organisers to see their events here</p>
         </div>
       );
     }
@@ -196,6 +211,8 @@ export default function ListOverlay({
             onFriendClick={onFriendClick}
             events={events}
             onEventClick={onEventClick}
+            searchOrganisers={searchOrganisers}
+            onOrganizerClick={onOrganizerClick}
           />
         </div>
 

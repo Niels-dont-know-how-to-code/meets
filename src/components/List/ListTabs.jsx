@@ -1,12 +1,12 @@
-import { Heart } from 'lucide-react';
+import { Heart, Users } from 'lucide-react';
 
 export default function ListTabs({ activeTab = 'all', onTabChange, isAuthenticated, onLoginRequired }) {
-  const handleInterestsClick = () => {
+  const handleAuthTab = (tab) => {
     if (!isAuthenticated && onLoginRequired) {
       onLoginRequired();
       return;
     }
-    onTabChange('interests');
+    onTabChange(tab);
   };
 
   return (
@@ -22,7 +22,18 @@ export default function ListTabs({ activeTab = 'all', onTabChange, isAuthenticat
         All Events
       </button>
       <button
-        onClick={handleInterestsClick}
+        onClick={() => handleAuthTab('following')}
+        className={`flex-1 py-2.5 text-sm font-display font-medium transition-colors border-b-2 inline-flex items-center justify-center gap-1.5 ${
+          activeTab === 'following'
+            ? 'text-meets-500 border-meets-500'
+            : 'text-ink-tertiary border-transparent hover:text-ink-secondary'
+        }`}
+      >
+        <Users size={14} />
+        Following
+      </button>
+      <button
+        onClick={() => handleAuthTab('interests')}
         className={`flex-1 py-2.5 text-sm font-display font-medium transition-colors border-b-2 inline-flex items-center justify-center gap-1.5 ${
           activeTab === 'interests'
             ? 'text-meets-500 border-meets-500'
@@ -30,7 +41,7 @@ export default function ListTabs({ activeTab = 'all', onTabChange, isAuthenticat
         }`}
       >
         <Heart size={14} />
-        My Interests
+        Interests
       </button>
     </div>
   );

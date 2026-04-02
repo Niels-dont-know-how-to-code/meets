@@ -1,4 +1,4 @@
-import { X, BadgeCheck } from 'lucide-react'
+import { X, BadgeCheck, Star } from 'lucide-react'
 import CategoryBadge from '../Event/CategoryBadge'
 
 export default function OrganizerProfileModal({
@@ -59,6 +59,14 @@ export default function OrganizerProfileModal({
                 <BadgeCheck size={18} className="text-meets-500" />
               )}
             </div>
+
+            {/* Organiser badge */}
+            {profile.is_organiser && (
+              <span className="mt-1.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-600 text-[11px] font-display font-bold">
+                <Star size={11} />
+                Organiser
+              </span>
+            )}
 
             {/* Member since */}
             {memberSince && (

@@ -253,6 +253,18 @@ export function useSocial(user, selectedDate) {
     return { success: true }
   }, [fetchFriends])
 
+  const searchOrganisers = useCallback(async (term) => {
+    if (!term || term.trim().length < 2) return []
+    const { data, error } = await supabase.rpc('search_organisers', {
+      search_term: term.trim(),
+    })
+    if (error) {
+      console.error('Error searching organisers:', error)
+      return []
+    }
+    return data || []
+  }, [])
+
   const fetchOrganizerProfile = useCallback(async (userId) => {
     const { data, error } = await supabase.rpc('get_organizer_profile', {
       organizer_id: userId,
@@ -297,6 +309,7 @@ export function useSocial(user, selectedDate) {
     friends,
     pendingRequests,
     fetchOrganizerProfile,
+    searchOrganisers,
     friendsInterests,
   }
 }

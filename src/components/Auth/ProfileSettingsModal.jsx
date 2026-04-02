@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react'
-import { X, Camera, Loader2, User, Lock, Check } from 'lucide-react'
+import { X, Camera, Loader2, User, Lock, Check, Star } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
-export default function ProfileSettingsModal({ user, displayName, avatarUrl, onClose, updateProfile, updatePassword, showToast }) {
+export default function ProfileSettingsModal({ user, displayName, avatarUrl, onClose, updateProfile, updatePassword, showToast, isOrganiser, toggleOrganiser }) {
+  const [togglingOrganiser, setTogglingOrganiser] = useState(false)
   const [tab, setTab] = useState('profile')
   const [name, setName] = useState(displayName || '')
   const [uploading, setUploading] = useState(false)
@@ -225,6 +226,45 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, onC
                   className="w-full px-4 py-3 bg-surface-secondary rounded-xl font-body text-sm
                     text-ink-secondary cursor-not-allowed"
                 />
+              </div>
+
+              {/* Organiser Account */}
+              <div className="p-4 rounded-xl bg-surface-secondary">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                      <Star size={16} className="text-amber-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-display font-bold text-ink">Organiser Account</p>
+                      <p className="text-xs text-ink-tertiary font-body">
+                        {isOrganiser ? 'Your events are public' : 'Make events publicly discoverable'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      setTogglingOrganiser(true)
+                      const result = await toggleOrganiser(!isOrganiser)
+                      if (result?.success) {
+                        showToast(isOrganiser ? 'Switched to regular account' : 'Organiser mode enabled!')
+                      } else {
+                        showToast('Something went wrong', 'error')
+                      }
+                      setTogglingOrganiser(false)
+                    }}
+                    disabled={togglingOrganiser}
+                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+                      isOrganiser ? 'bg-meets-500' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                        isOrganiser ? 'translate-x-5' : ''
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
 
               {/* Save */}
