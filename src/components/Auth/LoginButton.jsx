@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { LogIn, Settings, LogOut, Users } from 'lucide-react'
 
-export default function LoginButton({ user, onLoginClick, signOut, displayName, avatarUrl, onSettingsClick, onFriendsClick, pendingFriendCount }) {
+export default function LoginButton({ user, onLoginClick, signOut, displayName, avatarUrl, onSettingsClick, onFriendsClick, pendingFriendCount, onMenuOpen }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
 
@@ -17,11 +17,17 @@ export default function LoginButton({ user, onLoginClick, signOut, displayName, 
     return () => document.removeEventListener('mousedown', handleClick)
   }, [menuOpen])
 
+  const toggleMenu = () => {
+    const opening = !menuOpen
+    setMenuOpen(opening)
+    if (opening) onMenuOpen?.()
+  }
+
   if (user) {
     return (
       <div className="relative" ref={menuRef}>
         <button
-          onClick={() => setMenuOpen((prev) => !prev)}
+          onClick={toggleMenu}
           className="flex items-center gap-2 floating-btn px-3 py-2 rounded-2xl border border-gray-100"
         >
           {avatarUrl ? (

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Plus, Loader2, MapPin } from 'lucide-react'
 import { useAuth } from './hooks/useAuth'
 import ProfileSettingsModal from './components/Auth/ProfileSettingsModal'
@@ -12,7 +12,6 @@ import MapView from './components/Map/MapView'
 import DateNavigator from './components/Layout/DateNavigator'
 import CategoryFilter from './components/Layout/CategoryFilter'
 import RadiusFilter from './components/Layout/RadiusFilter'
-import CitySearch from './components/Layout/CitySearch'
 import LoginButton from './components/Auth/LoginButton'
 import AuthModal from './components/Auth/AuthModal'
 import FloatingControls from './components/Layout/FloatingControls'
@@ -45,16 +44,14 @@ export default function App() {
   })
 
   // Discovery state
-  const [endDate, setEndDate] = useState(null)
   const [radiusKm, setRadiusKm] = useState(null)
 
   // Build fetch options for useEvents
   const fetchOptions = useMemo(() => ({
-    endDate: endDate || undefined,
     userLat: radiusKm && position ? position[0] : undefined,
     userLng: radiusKm && position ? position[1] : undefined,
     radiusKm: radiusKm || undefined,
-  }), [endDate, radiusKm, position])
+  }), [radiusKm, position])
 
   // Events
   const {
@@ -112,6 +109,11 @@ export default function App() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showOrganizerProfile, setShowOrganizerProfile] = useState(null)
   const [showFriendsList, setShowFriendsList] = useState(false)
+
+  // Close all popups helper — closes dropdowns when another opens
+  const closePopups = useCallback(() => {
+    setShowNotifications(false)
+  }, [])
 
   // Share link: read ?event=<id> from URL on mount
   useEffect(() => {
@@ -181,15 +183,8 @@ export default function App() {
     setSelectedCategory(null)
   }
 
-  const handleEndDateChange = (date) => {
-    if (date === null) {
-      setEndDate(null)
-    } else {
-      setEndDate(date instanceof Date ? date : new Date(date))
-    }
-  }
-
   const handleToggleList = () => {
+    closePopups()
     setShowList((prev) => !prev)
   }
 
@@ -199,6 +194,7 @@ export default function App() {
   }
 
   const handleHostEvent = () => {
+    closePopups()
     if (user) {
       setShowHostForm(true)
     } else {
@@ -267,6 +263,7 @@ export default function App() {
   }
 
   const handleOrganizerClick = async (organizerId) => {
+    closePopups()
     const profile = await fetchOrganizerProfile(organizerId)
     if (profile) {
       setShowOrganizerProfile(profile)
@@ -287,13 +284,12 @@ export default function App() {
     }
   }
 
-  const handleCitySelect = (city) => {
+  const handlePlaceSelect = (city) => {
     setMapFlyTarget({ lat: city.lat, lng: city.lng, _t: Date.now() })
   }
 
   const handleNotificationClick = (notification) => {
     setShowNotifications(false)
-    // Navigate based on notification type
     if (notification.data?.event_id) {
       const found = events.find(e => e.id === notification.data.event_id)
       if (found) {
@@ -304,6 +300,29 @@ export default function App() {
     } else if (notification.data?.actor_id) {
       handleOrganizerClick(notification.data.actor_id)
     }
+  }
+
+  const handleNotificationBellClick = () => {
+    setShowNotifications(prev => {
+      // No other popups to close for bell specifically,
+      // but the LoginButton dropdown will close via outside click
+      return !prev
+    })
+  }
+
+  const handleFriendsClick = () => {
+    closePopups()
+    setShowFriendsList(true)
+  }
+
+  const handleSettingsClick = () => {
+    closePopups()
+    setShowSettings(true)
+  }
+
+  const handleFriendSearchClick = (friend) => {
+    // Open organizer profile for the friend
+    handleOrganizerClick(friend.id)
   }
 
   return (
@@ -324,8 +343,6 @@ export default function App() {
         <DateNavigator
           selectedDate={selectedDate}
           onDateChange={handleDateChange}
-          endDate={endDate}
-          onEndDateChange={handleEndDateChange}
         />
         <div className="flex items-center gap-2">
           <CategoryFilter selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
@@ -338,12 +355,11 @@ export default function App() {
       </div>
 
       <div className="absolute top-4 right-4 z-10 flex items-center gap-2 animate-fade-in flex-shrink-0">
-        <CitySearch onCitySelect={handleCitySelect} />
         {user && (
           <div className="relative">
             <NotificationBell
               unreadCount={unreadCount}
-              onClick={() => setShowNotifications(prev => !prev)}
+              onClick={handleNotificationBellClick}
             />
             {showNotifications && (
               <NotificationPanel
@@ -362,9 +378,10 @@ export default function App() {
           signOut={signOut}
           displayName={displayName}
           avatarUrl={avatarUrl}
-          onSettingsClick={() => setShowSettings(true)}
-          onFriendsClick={() => setShowFriendsList(true)}
+          onSettingsClick={handleSettingsClick}
+          onFriendsClick={handleFriendsClick}
           pendingFriendCount={pendingRequests.length}
+          onMenuOpen={closePopups}
         />
         <FloatingControls
           onToggleList={handleToggleList}
@@ -426,6 +443,9 @@ export default function App() {
         onLoginRequired={() => openAuthModal('signup')}
         onHostEvent={handleHostEvent}
         friendsInterests={friendsInterests}
+        friends={friends}
+        onPlaceSelect={handlePlaceSelect}
+        onFriendClick={handleFriendSearchClick}
       />
 
       {/* Event Detail Modal */}

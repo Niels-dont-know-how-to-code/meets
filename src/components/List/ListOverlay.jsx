@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, MapPin, RefreshCw, Calendar, Heart, Search, Plus } from 'lucide-react';
-import SearchBar from './SearchBar';
+import UnifiedSearchBar from './UnifiedSearchBar';
 import ListTabs from './ListTabs';
 import EventCard from './EventCard';
 import SkeletonCard from './SkeletonCard';
@@ -23,6 +23,9 @@ export default function ListOverlay({
   onLoginRequired,
   onHostEvent,
   friendsInterests,
+  friends,
+  onPlaceSelect,
+  onFriendClick,
 }) {
   // Pull-to-refresh state
   const [pullDistance, setPullDistance] = useState(0);
@@ -183,9 +186,17 @@ export default function ListOverlay({
           </button>
         </div>
 
-        {/* Search */}
+        {/* Unified Search */}
         <div className="px-5 pb-2">
-          <SearchBar value={searchQuery} onChange={onSearchChange} />
+          <UnifiedSearchBar
+            value={searchQuery}
+            onChange={onSearchChange}
+            onPlaceSelect={onPlaceSelect}
+            friends={friends}
+            onFriendClick={onFriendClick}
+            events={events}
+            onEventClick={onEventClick}
+          />
         </div>
 
         {/* Tabs */}

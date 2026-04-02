@@ -40,13 +40,13 @@ export default function MapView({
   selectedEvent = null,
   onMarkerClick,
   onBoundsChange,
-  center = DEFAULT_CENTER,
+  center,
   zoom = DEFAULT_ZOOM,
   flyTarget = null,
 }) {
   return (
     <MapContainer
-      center={center}
+      center={center || DEFAULT_CENTER}
       zoom={zoom}
       className="w-full h-full"
       style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', zIndex: 0 }}
