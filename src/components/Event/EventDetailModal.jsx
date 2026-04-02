@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, MapPin, Clock, User, Pencil, Trash2, Calendar, ExternalLink, Share2, Flag } from 'lucide-react';
+import { X, MapPin, Clock, User, Pencil, Trash2, Calendar, ExternalLink, Share2, Flag, BadgeCheck } from 'lucide-react';
 import { formatTime, formatDate, isHappeningNow } from '../../lib/dateUtils';
 import { supabase } from '../../lib/supabase';
 import CategoryBadge from './CategoryBadge';
@@ -16,6 +16,8 @@ export default function EventDetailModal({
   onToggleInterest,
   isAdmin,
   showToast,
+  onOrganizerClick,
+  friendsInterested,
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showReportForm, setShowReportForm] = useState(false);
@@ -221,7 +223,13 @@ export default function EventDetailModal({
             {event.organizer_name && (
               <div className="flex items-center gap-3 text-ink-secondary">
                 <User size={18} className="shrink-0" />
-                <span className="font-body text-sm">{event.organizer_name}</span>
+                <button
+                  onClick={() => onOrganizerClick?.(event.created_by_id)}
+                  className="font-body text-sm text-meets-600 hover:underline cursor-pointer inline-flex items-center gap-1"
+                >
+                  {event.organizer_name}
+                  {event.is_verified && <BadgeCheck size={14} className="text-meets-500" />}
+                </button>
               </div>
             )}
           </div>
@@ -237,7 +245,14 @@ export default function EventDetailModal({
 
           {/* Creator */}
           <p className="mt-4 text-xs text-ink-tertiary font-body">
-            Created by {event.creator_username || 'Anonymous'}
+            Created by{' '}
+            <button
+              onClick={() => onOrganizerClick?.(event.created_by_id)}
+              className="text-meets-600 hover:underline cursor-pointer inline-flex items-center gap-0.5"
+            >
+              {event.creator_username || 'Anonymous'}
+              {event.is_verified && <BadgeCheck size={12} className="text-meets-500" />}
+            </button>
           </p>
 
           {/* Interested + Share */}
@@ -258,6 +273,39 @@ export default function EventDetailModal({
               Share
             </button>
           </div>
+
+          {/* Friends interested */}
+          {friendsInterested && friendsInterested.length > 0 && (
+            <div className="mt-3 flex items-center gap-2">
+              <div className="flex -space-x-1.5">
+                {friendsInterested.slice(0, 3).map((f, i) => (
+                  f.friend_avatar ? (
+                    <img
+                      key={f.friend_id}
+                      src={f.friend_avatar}
+                      alt={f.friend_name}
+                      className="w-5 h-5 rounded-full object-cover border-2 border-white"
+                      style={{ zIndex: 3 - i }}
+                    />
+                  ) : (
+                    <div
+                      key={f.friend_id}
+                      className="w-5 h-5 rounded-full bg-meets-500 flex items-center justify-center text-white text-[8px] font-bold border-2 border-white"
+                      style={{ zIndex: 3 - i }}
+                    >
+                      {f.friend_name?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                  )
+                ))}
+              </div>
+              <span className="text-xs text-ink-secondary font-body">
+                {friendsInterested[0]?.friend_name}
+                {friendsInterested.length > 1
+                  ? ` and ${friendsInterested.length - 1} other${friendsInterested.length - 1 > 1 ? 's' : ''} interested`
+                  : ' is interested'}
+              </span>
+            </div>
+          )}
 
           {/* Manage buttons */}
           {canManage && (

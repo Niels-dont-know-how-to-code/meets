@@ -5,16 +5,24 @@ import ProfileSettingsModal from './components/Auth/ProfileSettingsModal'
 import { useGeolocation } from './hooks/useGeolocation'
 import { useEvents } from './hooks/useEvents'
 import { useToast } from './hooks/useToast'
+import { useSocial } from './hooks/useSocial'
+import { useNotifications } from './hooks/useNotifications'
 import { DEFAULT_ZOOM } from './lib/constants'
 import MapView from './components/Map/MapView'
 import DateNavigator from './components/Layout/DateNavigator'
 import CategoryFilter from './components/Layout/CategoryFilter'
+import RadiusFilter from './components/Layout/RadiusFilter'
+import CitySearch from './components/Layout/CitySearch'
 import LoginButton from './components/Auth/LoginButton'
 import AuthModal from './components/Auth/AuthModal'
 import FloatingControls from './components/Layout/FloatingControls'
 import ListOverlay from './components/List/ListOverlay'
 import EventDetailModal from './components/Event/EventDetailModal'
 import HostEventModal from './components/Event/HostEventModal'
+import NotificationBell from './components/Social/NotificationBell'
+import NotificationPanel from './components/Social/NotificationPanel'
+import OrganizerProfileModal from './components/Social/OrganizerProfileModal'
+import FriendsList from './components/Social/FriendsList'
 import Toast from './components/Toast'
 import CookieConsent from './components/CookieConsent'
 
@@ -36,6 +44,18 @@ export default function App() {
     return d
   })
 
+  // Discovery state
+  const [endDate, setEndDate] = useState(null)
+  const [radiusKm, setRadiusKm] = useState(null)
+
+  // Build fetch options for useEvents
+  const fetchOptions = useMemo(() => ({
+    endDate: endDate || undefined,
+    userLat: radiusKm && position ? position[0] : undefined,
+    userLng: radiusKm && position ? position[1] : undefined,
+    radiusKm: radiusKm || undefined,
+  }), [endDate, radiusKm, position])
+
   // Events
   const {
     events,
@@ -47,7 +67,30 @@ export default function App() {
     deleteEvent,
     toggleInterest,
     refreshEvents,
-  } = useEvents(selectedDate)
+  } = useEvents(selectedDate, fetchOptions)
+
+  // Social
+  const {
+    followUser,
+    unfollowUser,
+    followedIds,
+    sendFriendRequest,
+    acceptFriendRequest,
+    declineFriendRequest,
+    removeFriend,
+    friends,
+    pendingRequests,
+    fetchOrganizerProfile,
+    friendsInterests,
+  } = useSocial(user, selectedDate)
+
+  // Notifications
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllRead,
+  } = useNotifications(user)
 
   // Toast notifications
   const { toast, showToast, hideToast } = useToast()
@@ -64,6 +107,11 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [mapFlyTarget, setMapFlyTarget] = useState(null)
   const [pendingEventId, setPendingEventId] = useState(null)
+
+  // Social UI state
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [showOrganizerProfile, setShowOrganizerProfile] = useState(null)
+  const [showFriendsList, setShowFriendsList] = useState(false)
 
   // Share link: read ?event=<id> from URL on mount
   useEffect(() => {
@@ -131,6 +179,14 @@ export default function App() {
     setShowEventDetail(null)
     setSearchQuery('')
     setSelectedCategory(null)
+  }
+
+  const handleEndDateChange = (date) => {
+    if (date === null) {
+      setEndDate(null)
+    } else {
+      setEndDate(date instanceof Date ? date : new Date(date))
+    }
   }
 
   const handleToggleList = () => {
@@ -210,6 +266,46 @@ export default function App() {
     }
   }
 
+  const handleOrganizerClick = async (organizerId) => {
+    const profile = await fetchOrganizerProfile(organizerId)
+    if (profile) {
+      setShowOrganizerProfile(profile)
+    }
+  }
+
+  const handleFollowFromProfile = async (userId) => {
+    const result = await followUser(userId)
+    if (result?.success) {
+      showToast('Following!')
+    }
+  }
+
+  const handleUnfollowFromProfile = async (userId) => {
+    const result = await unfollowUser(userId)
+    if (result?.success) {
+      showToast('Unfollowed')
+    }
+  }
+
+  const handleCitySelect = (city) => {
+    setMapFlyTarget({ lat: city.lat, lng: city.lng, _t: Date.now() })
+  }
+
+  const handleNotificationClick = (notification) => {
+    setShowNotifications(false)
+    // Navigate based on notification type
+    if (notification.data?.event_id) {
+      const found = events.find(e => e.id === notification.data.event_id)
+      if (found) {
+        setShowEventDetail(found)
+      }
+    } else if (notification.type === 'friend_request' || notification.type === 'friend_accepted') {
+      setShowFriendsList(true)
+    } else if (notification.data?.actor_id) {
+      handleOrganizerClick(notification.data.actor_id)
+    }
+  }
+
   return (
     <div className="relative w-full font-body" style={{ height: '100dvh' }}>
       {/* Map (full screen, behind everything) */}
@@ -225,12 +321,51 @@ export default function App() {
 
       {/* Floating controls over the map */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 animate-fade-in flex-shrink-0">
-        <DateNavigator selectedDate={selectedDate} onDateChange={handleDateChange} />
-        <CategoryFilter selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
+        <DateNavigator
+          selectedDate={selectedDate}
+          onDateChange={handleDateChange}
+          endDate={endDate}
+          onEndDateChange={handleEndDateChange}
+        />
+        <div className="flex items-center gap-2">
+          <CategoryFilter selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
+          <RadiusFilter
+            radiusKm={radiusKm}
+            onRadiusChange={setRadiusKm}
+            hasGeolocation={!!position}
+          />
+        </div>
       </div>
 
       <div className="absolute top-4 right-4 z-10 flex items-center gap-2 animate-fade-in flex-shrink-0">
-        <LoginButton user={user} onLoginClick={() => openAuthModal('login')} signOut={signOut} displayName={displayName} avatarUrl={avatarUrl} onSettingsClick={() => setShowSettings(true)} />
+        <CitySearch onCitySelect={handleCitySelect} />
+        {user && (
+          <div className="relative">
+            <NotificationBell
+              unreadCount={unreadCount}
+              onClick={() => setShowNotifications(prev => !prev)}
+            />
+            {showNotifications && (
+              <NotificationPanel
+                notifications={notifications}
+                onMarkRead={markAsRead}
+                onMarkAllRead={markAllRead}
+                onClose={() => setShowNotifications(false)}
+                onNotificationClick={handleNotificationClick}
+              />
+            )}
+          </div>
+        )}
+        <LoginButton
+          user={user}
+          onLoginClick={() => openAuthModal('login')}
+          signOut={signOut}
+          displayName={displayName}
+          avatarUrl={avatarUrl}
+          onSettingsClick={() => setShowSettings(true)}
+          onFriendsClick={() => setShowFriendsList(true)}
+          pendingFriendCount={pendingRequests.length}
+        />
         <FloatingControls
           onToggleList={handleToggleList}
           onHostEvent={handleHostEvent}
@@ -290,6 +425,7 @@ export default function App() {
         onRefresh={refreshEvents}
         onLoginRequired={() => openAuthModal('signup')}
         onHostEvent={handleHostEvent}
+        friendsInterests={friendsInterests}
       />
 
       {/* Event Detail Modal */}
@@ -309,6 +445,8 @@ export default function App() {
           onToggleInterest={() => handleToggleInterest(showEventDetail.id)}
           isAdmin={isAdmin}
           showToast={showToast}
+          onOrganizerClick={handleOrganizerClick}
+          friendsInterested={friendsInterests.get(showEventDetail.id)}
         />
       )}
 
@@ -342,6 +480,32 @@ export default function App() {
           updateProfile={updateProfile}
           updatePassword={updatePassword}
           showToast={showToast}
+        />
+      )}
+
+      {/* Organizer Profile Modal */}
+      {showOrganizerProfile && (
+        <OrganizerProfileModal
+          profile={showOrganizerProfile}
+          onClose={() => setShowOrganizerProfile(null)}
+          isFollowing={followedIds.has(showOrganizerProfile.id)}
+          onFollow={handleFollowFromProfile}
+          onUnfollow={handleUnfollowFromProfile}
+          user={user}
+        />
+      )}
+
+      {/* Friends List Modal */}
+      {showFriendsList && (
+        <FriendsList
+          friends={friends}
+          pendingRequests={pendingRequests}
+          onAccept={acceptFriendRequest}
+          onDecline={declineFriendRequest}
+          onRemove={removeFriend}
+          onSendRequest={sendFriendRequest}
+          onClose={() => setShowFriendsList(false)}
+          user={user}
         />
       )}
 

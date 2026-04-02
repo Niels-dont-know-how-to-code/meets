@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { LogIn, Settings, LogOut } from 'lucide-react'
+import { LogIn, Settings, LogOut, Users } from 'lucide-react'
 
-export default function LoginButton({ user, onLoginClick, signOut, displayName, avatarUrl, onSettingsClick }) {
+export default function LoginButton({ user, onLoginClick, signOut, displayName, avatarUrl, onSettingsClick, onFriendsClick, pendingFriendCount }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
 
@@ -52,6 +52,22 @@ export default function LoginButton({ user, onLoginClick, signOut, displayName, 
             >
               <Settings size={16} className="text-ink-secondary" />
               Settings
+            </button>
+            <div className="border-t border-gray-100" />
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                onFriendsClick?.()
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-body text-ink hover:bg-surface-secondary transition-colors"
+            >
+              <Users size={16} className="text-ink-secondary" />
+              Friends
+              {pendingFriendCount > 0 && (
+                <span className="ml-auto inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                  {pendingFriendCount}
+                </span>
+              )}
             </button>
             <div className="border-t border-gray-100" />
             <button

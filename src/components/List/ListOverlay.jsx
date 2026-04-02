@@ -4,6 +4,7 @@ import SearchBar from './SearchBar';
 import ListTabs from './ListTabs';
 import EventCard from './EventCard';
 import SkeletonCard from './SkeletonCard';
+import TrendingSection from './TrendingSection';
 
 export default function ListOverlay({
   events,
@@ -21,6 +22,7 @@ export default function ListOverlay({
   onRefresh,
   onLoginRequired,
   onHostEvent,
+  friendsInterests,
 }) {
   // Pull-to-refresh state
   const [pullDistance, setPullDistance] = useState(0);
@@ -196,6 +198,13 @@ export default function ListOverlay({
           />
         </div>
 
+        {/* Trending */}
+        {!loading && events.length > 0 && (
+          <div className="px-4 pt-2">
+            <TrendingSection events={events} onEventClick={onEventClick} />
+          </div>
+        )}
+
         {/* Event List */}
         <div
           ref={scrollRef}
@@ -236,6 +245,7 @@ export default function ListOverlay({
                 index={index}
                 isInterested={userInterests.has(event.id)}
                 onToggleInterest={onToggleInterest}
+                friendsInterested={friendsInterests?.get(event.id)}
               />
             ))
           )}

@@ -1,9 +1,9 @@
-import { Clock } from 'lucide-react';
+import { Clock, BadgeCheck } from 'lucide-react';
 import { formatTime, isHappeningNow } from '../../lib/dateUtils';
 import CategoryBadge from '../Event/CategoryBadge';
 import InterestedButton from '../Event/InterestedButton';
 
-export default function EventCard({ event, onClick, compact = false, index, isInterested = false, onToggleInterest }) {
+export default function EventCard({ event, onClick, compact = false, index, isInterested = false, onToggleInterest, friendsInterested }) {
   const handleClick = () => onClick(event);
 
   return (
@@ -50,10 +50,44 @@ export default function EventCard({ event, onClick, compact = false, index, isIn
           )}
 
           <div className="flex items-center gap-2 mt-2">
-            <span className="text-xs text-ink-tertiary font-body">
+            <span className="text-xs text-ink-tertiary font-body inline-flex items-center gap-0.5">
               by {event.creator_username || 'Anonymous'}
+              {event.is_verified && <BadgeCheck size={12} className="text-meets-500" />}
             </span>
           </div>
+
+          {/* Friends interested */}
+          {friendsInterested && friendsInterested.length > 0 && (
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <div className="flex -space-x-1">
+                {friendsInterested.slice(0, 3).map((f, i) => (
+                  f.friend_avatar ? (
+                    <img
+                      key={f.friend_id}
+                      src={f.friend_avatar}
+                      alt={f.friend_name}
+                      className="w-4 h-4 rounded-full object-cover border border-white"
+                      style={{ zIndex: 3 - i }}
+                    />
+                  ) : (
+                    <div
+                      key={f.friend_id}
+                      className="w-4 h-4 rounded-full bg-meets-500 flex items-center justify-center text-white text-[7px] font-bold border border-white"
+                      style={{ zIndex: 3 - i }}
+                    >
+                      {f.friend_name?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                  )
+                ))}
+              </div>
+              <span className="text-[10px] text-ink-secondary font-body">
+                {friendsInterested[0]?.friend_name}
+                {friendsInterested.length > 1
+                  ? ` +${friendsInterested.length - 1}`
+                  : ''}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col items-end gap-2 pt-5">

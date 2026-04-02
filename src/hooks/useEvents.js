@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { formatDateForApi } from '../lib/dateUtils'
 
-export function useEvents(selectedDate) {
+export function useEvents(selectedDate, fetchOptions = {}) {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [userInterests, setUserInterests] = useState(new Set())
   const fetchIdRef = useRef(0)
+  const fetchOptionsRef = useRef(fetchOptions)
 
   const fetchUserInterests = useCallback(async (userId) => {
     const { data, error: err } = await supabase
@@ -23,14 +24,21 @@ export function useEvents(selectedDate) {
     return new Set(data.map((row) => row.event_id))
   }, [])
 
-  const fetchEvents = useCallback(async (date) => {
+  const fetchEvents = useCallback(async (date, options = {}) => {
     const currentId = ++fetchIdRef.current
+    fetchOptionsRef.current = options
     setLoading(true)
     setError(null)
+
+    const { endDate, userLat, userLng, radiusKm } = options
 
     try {
       const { data, error: rpcError } = await supabase.rpc('get_events_with_details', {
         target_date: formatDateForApi(date),
+        end_date: endDate ? formatDateForApi(endDate) : null,
+        user_lat: userLat ?? null,
+        user_lng: userLng ?? null,
+        radius_km: radiusKm ?? null,
       })
 
       if (rpcError) throw rpcError
@@ -168,15 +176,16 @@ export function useEvents(selectedDate) {
 
   const refreshEvents = useCallback(() => {
     if (selectedDate) {
-      fetchEvents(selectedDate)
+      fetchEvents(selectedDate, fetchOptionsRef.current)
     }
   }, [selectedDate, fetchEvents])
 
   useEffect(() => {
     if (selectedDate) {
-      fetchEvents(selectedDate)
+      fetchEvents(selectedDate, fetchOptions)
     }
-  }, [selectedDate, fetchEvents])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, JSON.stringify(fetchOptions), fetchEvents])
 
   return {
     events,
