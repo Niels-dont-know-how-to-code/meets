@@ -10,8 +10,10 @@ export default function ListTabs({ activeTab = 'all', onTabChange, isAuthenticat
   };
 
   return (
-    <div className="flex border-b border-surface-secondary">
+    <div role="tablist" className="flex border-b border-surface-secondary">
       <button
+        role="tab"
+        aria-selected={activeTab === 'all'}
         onClick={() => onTabChange('all')}
         className={`flex-1 py-2.5 text-sm font-display font-medium transition-colors border-b-2 ${
           activeTab === 'all'
@@ -22,6 +24,8 @@ export default function ListTabs({ activeTab = 'all', onTabChange, isAuthenticat
         All Events
       </button>
       <button
+        role="tab"
+        aria-selected={activeTab === 'following'}
         onClick={() => handleAuthTab('following')}
         className={`flex-1 py-2.5 text-sm font-display font-medium transition-colors border-b-2 inline-flex items-center justify-center gap-1.5 ${
           activeTab === 'following'
@@ -33,6 +37,8 @@ export default function ListTabs({ activeTab = 'all', onTabChange, isAuthenticat
         Following
       </button>
       <button
+        role="tab"
+        aria-selected={activeTab === 'interests'}
         onClick={() => handleAuthTab('interests')}
         className={`flex-1 py-2.5 text-sm font-display font-medium transition-colors border-b-2 inline-flex items-center justify-center gap-1.5 ${
           activeTab === 'interests'

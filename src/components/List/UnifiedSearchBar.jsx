@@ -17,6 +17,7 @@ export default function UnifiedSearchBar({
   const [places, setPlaces] = useState([]);
   const [organisers, setPeople] = useState([]);
   const [searchingPlaces, setSearchingPlaces] = useState(false);
+  const [searchError, setSearchError] = useState(false);
   const debounceRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -33,13 +34,21 @@ export default function UnifiedSearchBar({
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       setSearchingPlaces(true);
-      const [placeResults, orgResults] = await Promise.all([
-        searchAddress(query),
-        searchPeople ? searchPeople(query) : [],
-      ]);
-      setPlaces(placeResults.slice(0, 3));
-      setPeople(orgResults || []);
-      setSearchingPlaces(false);
+      setSearchError(false);
+      try {
+        const [placeResults, orgResults] = await Promise.all([
+          searchAddress(query),
+          searchPeople ? searchPeople(query) : [],
+        ]);
+        setPlaces(placeResults.slice(0, 3));
+        setPeople(orgResults || []);
+      } catch {
+        setPlaces([]);
+        setPeople([]);
+        setSearchError(true);
+      } finally {
+        setSearchingPlaces(false);
+      }
     }, 600);
 
     return () => {
@@ -63,7 +72,7 @@ export default function UnifiedSearchBar({
     : [];
 
   const hasResults = matchedEvents.length > 0 || matchedFriends.length > 0 || places.length > 0 || organisers.length > 0;
-  const showDropdown = focused && query.length >= 2 && (hasResults || searchingPlaces);
+  const showDropdown = focused && query.length >= 2 && (hasResults || searchingPlaces || searchError);
 
   const handlePlaceClick = (place) => {
     onPlaceSelect({
@@ -124,6 +133,8 @@ export default function UnifiedSearchBar({
           onFocus={() => setFocused(true)}
           placeholder="Search events, places, friends..."
           autoComplete="off"
+          aria-label="Search events, places, and people"
+          aria-expanded={showDropdown}
           className="w-full pl-10 pr-9 py-2.5 rounded-2xl bg-surface-secondary border-none
             font-body text-sm text-ink placeholder:text-ink-tertiary
             focus:outline-none focus:ring-2 focus:ring-meets-500 transition-shadow"
@@ -140,7 +151,7 @@ export default function UnifiedSearchBar({
 
       {/* Unified dropdown */}
       {showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-float overflow-hidden z-50 max-h-72 overflow-y-auto">
+        <div role="listbox" className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-float overflow-hidden z-50 max-h-72 overflow-y-auto">
           {/* Event results */}
           {matchedEvents.length > 0 && (
             <div>
@@ -194,11 +205,17 @@ export default function UnifiedSearchBar({
                   onClick={() => handleFriendClick(friend)}
                   className="w-full text-left px-3 py-2 hover:bg-surface-secondary transition-colors flex items-center gap-2"
                 >
-                  {friend.avatar_url ? (
-                    <img src={friend.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
-                  ) : (
-                    <Users size={14} className="text-meets-500 flex-shrink-0" />
-                  )}
+                  <div className="relative w-5 h-5 flex-shrink-0">
+                    <Users size={14} className="text-meets-500 w-5 h-5 flex items-center justify-center" />
+                    {friend.avatar_url && (
+                      <img
+                        src={friend.avatar_url}
+                        alt=""
+                        className="absolute inset-0 w-5 h-5 rounded-full object-cover"
+                        onError={(e) => { e.target.style.display = 'none' }}
+                      />
+                    )}
+                  </div>
                   <span className="text-sm font-body text-ink truncate">{friend.display_name}</span>
                 </button>
               ))}
@@ -218,11 +235,17 @@ export default function UnifiedSearchBar({
                   onClick={() => handleOrganiserClick(org)}
                   className="w-full text-left px-3 py-2 hover:bg-surface-secondary transition-colors flex items-center gap-2"
                 >
-                  {org.avatar_url ? (
-                    <img src={org.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
-                  ) : (
-                    <Users size={14} className="text-meets-500 flex-shrink-0" />
-                  )}
+                  <div className="relative w-5 h-5 flex-shrink-0">
+                    <Users size={14} className="text-meets-500 w-5 h-5 flex items-center justify-center" />
+                    {org.avatar_url && (
+                      <img
+                        src={org.avatar_url}
+                        alt=""
+                        className="absolute inset-0 w-5 h-5 rounded-full object-cover"
+                        onError={(e) => { e.target.style.display = 'none' }}
+                      />
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-body text-ink truncate flex items-center gap-1">
                       {org.display_name}
@@ -237,6 +260,13 @@ export default function UnifiedSearchBar({
                   </span>
                 </button>
               ))}
+            </div>
+          )}
+
+          {/* Search error */}
+          {searchError && (
+            <div className="px-3 py-3 text-center">
+              <span className="text-xs font-body text-red-500">Search failed</span>
             </div>
           )}
 

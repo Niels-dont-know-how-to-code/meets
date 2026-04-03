@@ -1,6 +1,10 @@
 {
+  "crons": [
+    { "path": "/api/import-events", "schedule": "0 6 * * *" }
+  ],
   "rewrites": [
     { "source": "/api/og", "destination": "/api/og.js" },
+    { "source": "/api/import-events", "destination": "/api/import-events.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
@@ -11,7 +15,9 @@
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "geolocation=(self), camera=(), microphone=()" }
+        { "key": "Permissions-Policy", "value": "geolocation=(self), camera=(), microphone=()" },
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.basemaps.cartocdn.com https://oosnzahggbgwgtppurqz.supabase.co; font-src 'self'; connect-src 'self' https://oosnzahggbgwgtppurqz.supabase.co https://nominatim.openstreetmap.org; frame-src 'none'; object-src 'none'; base-uri 'self'" }
       ]
     }
   ]

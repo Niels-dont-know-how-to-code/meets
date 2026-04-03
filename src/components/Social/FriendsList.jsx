@@ -64,17 +64,19 @@ export default function FriendsList({
                     key={req.friendship_id}
                     className="flex items-center gap-3 p-3 rounded-xl bg-surface-secondary"
                   >
-                    {req.avatar_url ? (
-                      <img
-                        src={req.avatar_url}
-                        alt={req.display_name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
+                    <div className="relative w-10 h-10 flex-shrink-0">
                       <div className="w-10 h-10 rounded-full bg-meets-500 flex items-center justify-center text-white text-sm font-bold">
                         {req.display_name?.charAt(0)?.toUpperCase() || '?'}
                       </div>
-                    )}
+                      {req.avatar_url && (
+                        <img
+                          src={req.avatar_url}
+                          alt={req.display_name}
+                          className="absolute inset-0 w-10 h-10 rounded-full object-cover"
+                          onError={(e) => { e.target.style.display = 'none' }}
+                        />
+                      )}
+                    </div>
                     <span className="flex-1 font-display font-medium text-sm text-ink truncate">
                       {req.display_name}
                     </span>
@@ -110,17 +112,19 @@ export default function FriendsList({
                     key={friend.friendship_id}
                     className="flex items-center gap-3 p-3 rounded-xl bg-surface-secondary"
                   >
-                    {friend.avatar_url ? (
-                      <img
-                        src={friend.avatar_url}
-                        alt={friend.display_name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
+                    <div className="relative w-10 h-10 flex-shrink-0">
                       <div className="w-10 h-10 rounded-full bg-meets-500 flex items-center justify-center text-white text-sm font-bold">
                         {friend.display_name?.charAt(0)?.toUpperCase() || '?'}
                       </div>
-                    )}
+                      {friend.avatar_url && (
+                        <img
+                          src={friend.avatar_url}
+                          alt={friend.display_name}
+                          className="absolute inset-0 w-10 h-10 rounded-full object-cover"
+                          onError={(e) => { e.target.style.display = 'none' }}
+                        />
+                      )}
+                    </div>
                     <span className="flex-1 font-display font-medium text-sm text-ink truncate">
                       {friend.display_name}
                     </span>

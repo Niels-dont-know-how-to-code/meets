@@ -8,6 +8,7 @@ import { useToast } from './hooks/useToast'
 import { useSocial } from './hooks/useSocial'
 import { useNotifications } from './hooks/useNotifications'
 import { DEFAULT_ZOOM } from './lib/constants'
+import { supabase } from './lib/supabase'
 import MapView from './components/Map/MapView'
 import DateNavigator from './components/Layout/DateNavigator'
 import CategoryFilter from './components/Layout/CategoryFilter'
@@ -29,7 +30,7 @@ import PasswordResetModal from './components/Auth/PasswordResetModal'
 
 export default function App() {
   // Auth
-  const { user, loading: authLoading, signOut, updateProfile, updatePassword, isAdmin, displayName, avatarUrl, username, checkUsernameAvailable, isRecovery, clearRecovery } = useAuth()
+  const { user, loading: authLoading, signOut, updateProfile, updatePassword, isAdmin, displayName, avatarUrl, username, checkUsernameAvailable, isRecovery, clearRecovery, deleteAccount } = useAuth()
 
   // Auth modal state
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -129,25 +130,57 @@ export default function App() {
     }
   }, [])
 
-  // Open shared event once events are loaded
+  // Fetch shared event directly by ID (independent of selectedDate)
   useEffect(() => {
-    if (pendingEventId && events.length > 0) {
-      const found = events.find(e => e.id === pendingEventId)
+    if (!pendingEventId) return
+
+    let cancelled = false
+
+    async function fetchSharedEvent() {
+      // Fetch the event directly by ID, regardless of selected date
+      const { data: eventRow, error: fetchError } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', pendingEventId)
+        .single()
+
+      if (cancelled) return
+
+      if (fetchError || !eventRow) {
+        showToast('Event not found — it may have been removed', 'error')
+        setPendingEventId(null)
+        return
+      }
+
+      // Set the date to the event's date so surrounding UI is consistent
+      const eventDate = new Date(eventRow.date + 'T00:00:00')
+      setSelectedDate(eventDate)
+
+      // Now fetch the full event with details (interested count, organizer, etc.)
+      const { data: fullEvents } = await supabase.rpc('get_events_with_details', {
+        target_date: eventRow.date,
+        end_date: null,
+        user_lat: null,
+        user_lng: null,
+        radius_km: null,
+      })
+
+      if (cancelled) return
+
+      const found = (fullEvents || []).find(e => e.id === pendingEventId)
       if (found) {
         setShowEventDetail(found)
-        setPendingEventId(null)
+      } else {
+        // Fallback: show the basic event data if RPC didn't return it
+        setShowEventDetail(eventRow)
       }
-    }
-  }, [events, pendingEventId])
-
-  // Timeout for shared event links — if event not found after loading
-  useEffect(() => {
-    if (!pendingEventId || eventsLoading) return
-    if (events.length >= 0 && !events.find(e => e.id === pendingEventId)) {
-      showToast('Event not found — it may have been removed', 'error')
       setPendingEventId(null)
     }
-  }, [pendingEventId, eventsLoading, events])
+
+    fetchSharedEvent()
+
+    return () => { cancelled = true }
+  }, [pendingEventId])
 
   // Filtered events for list (by bounds and category)
   const filteredEvents = useMemo(() => {
@@ -229,7 +262,12 @@ export default function App() {
       refreshEvents()
       showToast('Event created!')
     } catch (err) {
-      showToast('Something went wrong', 'error')
+      const msg = err?.message?.toLowerCase() || ''
+      if (msg.includes('rate') || msg.includes('limit') || msg.includes('policy') || err?.code === '42501') {
+        showToast("You've reached the daily event limit. Try again tomorrow.", 'error')
+      } else {
+        showToast('Something went wrong', 'error')
+      }
       throw err
     }
   }
@@ -263,6 +301,18 @@ export default function App() {
     setShowEventDetail(null)
     refreshEvents()
     showToast('Event deleted')
+  }
+
+  const handleCancelEvent = async (eventId) => {
+    const { error: err } = await updateEvent(eventId, { status: 'cancelled' })
+    if (err) {
+      console.error('Cancel failed:', err)
+      showToast('Something went wrong', 'error')
+      return
+    }
+    setShowEventDetail(null)
+    refreshEvents()
+    showToast('Event cancelled')
   }
 
   const handleToggleInterest = (eventId) => {
@@ -421,6 +471,27 @@ export default function App() {
         </div>
       )}
 
+      {/* Category empty state overlay on map */}
+      {!eventsLoading && selectedCategory && displayEvents.length === 0 && events.length > 0 && !showList && !showHostForm && !showEventDetail && (
+        <div className="absolute inset-0 z-[5] flex items-center justify-center pointer-events-none">
+          <div className="card p-6 text-center max-w-xs pointer-events-auto animate-bounce-in">
+            <div className="w-14 h-14 rounded-full bg-meets-50 flex items-center justify-center mx-auto mb-3">
+              <MapPin size={24} className="text-meets-500" />
+            </div>
+            <h3 className="font-display font-bold text-base text-ink mb-1">No {selectedCategory} events today</h3>
+            <p className="font-body text-sm text-ink-secondary mb-4">
+              There are events on this date, just not in this category.
+            </p>
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className="btn-secondary text-sm px-5 py-2"
+            >
+              Show all events
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Host Event FAB at bottom */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10">
         <button
@@ -462,6 +533,7 @@ export default function App() {
         followedIds={followedIds}
         searchOrganisers={searchOrganisers}
         onOrganizerClick={handleOrganizerClick}
+        totalEventCount={events.length}
       />
 
       {/* Event Detail Modal */}
@@ -476,6 +548,7 @@ export default function App() {
             setShowEventDetail(null)
           }}
           onDelete={handleDeleteEvent}
+          onCancel={handleCancelEvent}
           isInterested={userInterests.has(showEventDetail.id)}
           interestedCount={showEventDetail.interested_count}
           onToggleInterest={() => handleToggleInterest(showEventDetail.id)}
@@ -527,6 +600,8 @@ export default function App() {
           username={username}
           checkUsernameAvailable={checkUsernameAvailable}
           onOpenLegal={setShowLegal}
+          deleteAccount={deleteAccount}
+          signOut={signOut}
         />
       )}
 

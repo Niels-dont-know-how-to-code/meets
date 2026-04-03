@@ -11,6 +11,7 @@ export default function EventDetailModal({
   onClose,
   onEdit,
   onDelete,
+  onCancel,
   isInterested,
   interestedCount,
   onToggleInterest,
@@ -20,6 +21,7 @@ export default function EventDetailModal({
   friendsInterested,
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const [showReportForm, setShowReportForm] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportCustomReason, setReportCustomReason] = useState('');
@@ -30,6 +32,15 @@ export default function EventDetailModal({
 
   const isCreator = user && user.id === event.created_by_id;
   const canManage = isCreator || isAdmin;
+  const isCancelled = event.status === 'cancelled';
+
+  const handleCancelEvent = () => {
+    if (!confirmCancel) {
+      setConfirmCancel(true);
+      return;
+    }
+    onCancel?.(event.id);
+  };
 
   const handleDelete = () => {
     if (!confirmDelete) {
@@ -120,10 +131,11 @@ export default function EventDetailModal({
             src={event.image_url}
             alt={event.title}
             className="w-full h-48 object-cover rounded-t-2xl"
+            onError={(e) => { e.target.style.display = 'none' }}
           />
         )}
 
-        <div className={`p-6 ${event.image_url ? 'pt-4' : 'pt-8'}`}>
+        <div className={`p-6 ${event.image_url ? 'pt-4' : 'pt-8'} ${isCancelled ? 'opacity-75' : ''}`}>
           {/* Title */}
           <h2 className="font-display text-2xl font-bold text-ink pr-8">
             {event.title}
@@ -137,6 +149,12 @@ export default function EventDetailModal({
                 bg-green-100 text-green-700 text-[10px] font-display font-bold uppercase tracking-wider">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                 Live
+              </span>
+            )}
+            {isCancelled && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+                bg-red-100 text-red-700 text-[10px] font-display font-bold uppercase tracking-wider">
+                Cancelled
               </span>
             )}
             {event.visibility === 'friends' && (
@@ -286,13 +304,17 @@ export default function EventDetailModal({
               <div className="flex -space-x-1.5">
                 {friendsInterested.slice(0, 3).map((f, i) => (
                   f.friend_avatar ? (
-                    <img
-                      key={f.friend_id}
-                      src={f.friend_avatar}
-                      alt={f.friend_name}
-                      className="w-5 h-5 rounded-full object-cover border-2 border-white"
-                      style={{ zIndex: 3 - i }}
-                    />
+                    <div key={f.friend_id} className="relative w-5 h-5" style={{ zIndex: 3 - i }}>
+                      <div className="w-5 h-5 rounded-full bg-meets-500 flex items-center justify-center text-white text-[8px] font-bold border-2 border-white">
+                        {f.friend_name?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                      <img
+                        src={f.friend_avatar}
+                        alt={f.friend_name}
+                        className="absolute inset-0 w-5 h-5 rounded-full object-cover border-2 border-white"
+                        onError={(e) => { e.target.style.display = 'none' }}
+                      />
+                    </div>
                   ) : (
                     <div
                       key={f.friend_id}
@@ -315,7 +337,7 @@ export default function EventDetailModal({
 
           {/* Manage buttons */}
           {canManage && (
-            <div className="mt-6 pt-4 border-t border-surface-secondary flex items-center gap-3">
+            <div className="mt-6 pt-4 border-t border-surface-secondary flex flex-wrap items-center gap-3">
               <button
                 onClick={() => onEdit(event)}
                 className="btn-secondary inline-flex items-center gap-2 px-4 py-2 rounded-xl
@@ -325,6 +347,41 @@ export default function EventDetailModal({
                 Edit
               </button>
 
+              {/* Cancel Event (only if not already cancelled) */}
+              {!isCancelled && (
+                <>
+                  {!confirmCancel ? (
+                    <button
+                      onClick={handleCancelEvent}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                        text-sm font-medium text-amber-600 hover:bg-amber-50 transition-colors"
+                    >
+                      <X size={16} />
+                      Cancel Event
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-amber-600 font-body">Cancel this event?</span>
+                      <button
+                        onClick={handleCancelEvent}
+                        className="px-3 py-1.5 rounded-lg bg-amber-500 text-white text-sm font-medium
+                          hover:bg-amber-600 transition-colors"
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => setConfirmCancel(false)}
+                        className="px-3 py-1.5 rounded-lg bg-surface-secondary text-ink text-sm
+                          font-medium hover:bg-surface-tertiary transition-colors"
+                      >
+                        No
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Delete Event */}
               {!confirmDelete ? (
                 <button
                   onClick={handleDelete}

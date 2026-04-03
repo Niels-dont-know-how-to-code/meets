@@ -38,17 +38,19 @@ export default function OrganizerProfileModal({
         <div className="p-6 pt-8">
           {/* Avatar */}
           <div className="flex flex-col items-center">
-            {profile.avatar_url ? (
-              <img
-                src={profile.avatar_url}
-                alt={profile.display_name}
-                className="w-16 h-16 rounded-full object-cover"
-              />
-            ) : (
+            <div className="relative w-16 h-16">
               <div className="w-16 h-16 rounded-full bg-meets-500 flex items-center justify-center text-white text-xl font-bold">
                 {profile.display_name?.charAt(0)?.toUpperCase() || '?'}
               </div>
-            )}
+              {profile.avatar_url && (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.display_name}
+                  className="absolute inset-0 w-16 h-16 rounded-full object-cover"
+                  onError={(e) => { e.target.style.display = 'none' }}
+                />
+              )}
+            </div>
 
             {/* Name + verified */}
             <div className="mt-3 flex items-center gap-1.5">

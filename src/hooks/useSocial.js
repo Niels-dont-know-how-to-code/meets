@@ -185,7 +185,7 @@ export function useSocial(user, selectedDate) {
 
       // RPC returns a single json object, not an array
       if (!data) {
-        return { error: 'No user found with that email' }
+        return { error: 'Could not send request. Check the email/username and try again.' }
       }
 
       const targetId = data.id
@@ -199,10 +199,10 @@ export function useSocial(user, selectedDate) {
 
       if (insertError) {
         if (insertError.code === '23505') {
-          return { error: 'Friend request already sent' }
+          return { error: 'Could not send request. Check the email/username and try again.' }
         }
         console.error('Error sending friend request:', insertError)
-        return { error: 'Could not send request' }
+        return { error: 'Could not send request. Check the email/username and try again.' }
       }
 
       return { success: true }

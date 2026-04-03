@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react'
-import { X, Camera, Loader2, User, Lock, Check } from 'lucide-react'
+import { X, Camera, Loader2, User, Lock, Check, Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
-export default function ProfileSettingsModal({ user, displayName, avatarUrl, username, onClose, updateProfile, updatePassword, showToast, checkUsernameAvailable, onOpenLegal }) {
+export default function ProfileSettingsModal({ user, displayName, avatarUrl, username, onClose, updateProfile, updatePassword, showToast, checkUsernameAvailable, onOpenLegal, deleteAccount, signOut }) {
   const [tab, setTab] = useState('profile')
   const [name, setName] = useState(displayName || '')
   const [usernameInput, setUsernameInput] = useState(username || '')
@@ -16,6 +16,11 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, use
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [changingPassword, setChangingPassword] = useState(false)
+
+  // Delete account state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0]
@@ -127,6 +132,24 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, use
       showToast(err.message || 'Something went wrong', 'error')
     } finally {
       setChangingPassword(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') return
+    setDeleting(true)
+    try {
+      const { error } = await deleteAccount()
+      if (error) {
+        showToast(error.message || 'Failed to delete account', 'error')
+        setDeleting(false)
+        return
+      }
+      showToast('Account deleted')
+      onClose()
+    } catch (err) {
+      showToast('Something went wrong', 'error')
+      setDeleting(false)
     }
   }
 
@@ -286,6 +309,66 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, use
                   </>
                 )}
               </button>
+
+              {/* Delete Account */}
+              <div className="mt-6 pt-5 border-t border-surface-secondary">
+                {!showDeleteConfirm ? (
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="inline-flex items-center gap-1.5 text-sm font-body text-red-500 hover:text-red-600 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                    Delete Account
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm font-body text-red-600">
+                      Are you sure? This will permanently delete your account and all your data.
+                    </p>
+                    <div>
+                      <label className="block text-xs font-body text-ink-secondary mb-1">
+                        Type <span className="font-bold">DELETE</span> to confirm
+                      </label>
+                      <input
+                        type="text"
+                        value={deleteConfirmText}
+                        onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        placeholder="DELETE"
+                        className="w-full px-4 py-2.5 bg-surface-secondary rounded-xl font-body text-sm
+                          placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-red-400
+                          transition-shadow"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleDeleteAccount}
+                        disabled={deleting || deleteConfirmText !== 'DELETE'}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-display font-medium
+                          text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition-colors"
+                      >
+                        {deleting ? (
+                          <>
+                            <Loader2 size={14} className="animate-spin" />
+                            Deleting...
+                          </>
+                        ) : (
+                          'Confirm Delete'
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowDeleteConfirm(false)
+                          setDeleteConfirmText('')
+                        }}
+                        className="px-4 py-2 rounded-xl text-sm font-display font-medium
+                          text-ink-secondary hover:bg-surface-secondary transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

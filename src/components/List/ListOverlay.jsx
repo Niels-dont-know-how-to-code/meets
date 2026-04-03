@@ -29,6 +29,7 @@ export default function ListOverlay({
   followedIds,
   searchOrganisers,
   onOrganizerClick,
+  totalEventCount = 0,
 }) {
   // Pull-to-refresh state
   const [pullDistance, setPullDistance] = useState(0);
@@ -264,18 +265,25 @@ export default function ListOverlay({
           ) : sortedEvents.length === 0 ? (
             renderEmptyState()
           ) : (
-            sortedEvents.map((event, index) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                onClick={onEventClick}
-                compact
-                index={index}
-                isInterested={userInterests.has(event.id)}
-                onToggleInterest={onToggleInterest}
-                friendsInterested={friendsInterests?.get(event.id)}
-              />
-            ))
+            <>
+              {totalEventCount > 0 && sortedEvents.length < totalEventCount && (
+                <p className="font-body text-xs text-ink-tertiary text-center pb-1">
+                  Showing {sortedEvents.length} of {totalEventCount} events in view
+                </p>
+              )}
+              {sortedEvents.map((event, index) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  onClick={onEventClick}
+                  compact
+                  index={index}
+                  isInterested={userInterests.has(event.id)}
+                  onToggleInterest={onToggleInterest}
+                  friendsInterested={friendsInterests?.get(event.id)}
+                />
+              ))}
+            </>
           )}
         </div>
       </div>

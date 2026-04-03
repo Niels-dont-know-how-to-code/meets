@@ -99,7 +99,14 @@ export function useAuth() {
     return data === true
   }
 
+  const deleteAccount = async () => {
+    const { data, error } = await supabase.rpc('delete_user_account')
+    if (error) return { error }
+    await supabase.auth.signOut()
+    return { data }
+  }
+
   const clearRecovery = () => setIsRecovery(false)
 
-  return { user, loading, signUp, signIn, signOut, updateProfile, updatePassword, resetPassword, isAdmin, displayName, avatarUrl, username, checkUsernameAvailable, isRecovery, clearRecovery }
+  return { user, loading, signUp, signIn, signOut, updateProfile, updatePassword, resetPassword, isAdmin, displayName, avatarUrl, username, checkUsernameAvailable, isRecovery, clearRecovery, deleteAccount }
 }

@@ -73,6 +73,9 @@ function escapeHtml(str) {
   return String(str || '')
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/`/g, '&#x60;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    .replace(/\//g, '&#x2F;')
 }

@@ -190,6 +190,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
                   placeholder="Your name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
+                  maxLength={100}
                   className="w-full px-4 py-3 bg-surface-secondary rounded-xl font-body text-sm
                     placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-meets-500
                     transition-shadow"

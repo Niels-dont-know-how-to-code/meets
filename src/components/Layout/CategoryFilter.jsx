@@ -6,7 +6,9 @@ export default function CategoryFilter({ selectedCategory, onCategoryChange }) {
       {/* All chip */}
       <button
         onClick={() => onCategoryChange(null)}
-        className={`px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap ${
+        aria-pressed={selectedCategory === null}
+        aria-label="All categories"
+        className={`px-3 py-2.5 rounded-full text-xs font-display font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap ${
           selectedCategory === null
             ? 'bg-meets-500 text-white scale-[1.02] shadow-float'
             : 'bg-white text-meets-500 shadow-card'
@@ -24,7 +26,8 @@ export default function CategoryFilter({ selectedCategory, onCategoryChange }) {
           <button
             key={cat}
             onClick={() => onCategoryChange(cat)}
-            className={`px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap ${
+            aria-pressed={isActive}
+            className={`px-3 py-2.5 rounded-full text-xs font-display font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap ${
               isActive ? 'text-white scale-[1.02] shadow-float' : 'bg-white shadow-card'
             }`}
             style={

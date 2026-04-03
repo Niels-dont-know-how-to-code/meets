@@ -33,7 +33,7 @@ export default function DateNavigator({ selectedDate, onDateChange }) {
       <button
         onClick={handlePrev}
         disabled={isPastDisabled}
-        className={`p-1 rounded-full transition-colors ${
+        className={`p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-colors ${
           isPastDisabled
             ? 'text-ink-tertiary cursor-not-allowed'
             : 'text-ink hover:bg-surface-secondary'
@@ -48,7 +48,7 @@ export default function DateNavigator({ selectedDate, onDateChange }) {
 
       <button
         onClick={handleNext}
-        className="p-1 rounded-full text-ink hover:bg-surface-secondary transition-colors"
+        className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-ink hover:bg-surface-secondary transition-colors"
       >
         <ChevronRight size={18} />
       </button>
@@ -58,7 +58,7 @@ export default function DateNavigator({ selectedDate, onDateChange }) {
       <div className="relative">
         <button
           onClick={handleCalendarClick}
-          className="p-1 rounded-full text-meets-500 hover:bg-meets-50 transition-colors"
+          className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-meets-500 hover:bg-meets-50 transition-colors"
         >
           <Calendar size={16} />
         </button>

@@ -5,6 +5,7 @@ import InterestedButton from '../Event/InterestedButton';
 
 export default function EventCard({ event, onClick, compact = false, index, isInterested = false, onToggleInterest, friendsInterested }) {
   const handleClick = () => onClick(event);
+  const isCancelled = event.status === 'cancelled';
 
   return (
     <div
@@ -12,14 +13,20 @@ export default function EventCard({ event, onClick, compact = false, index, isIn
       className={`card cursor-pointer transition-all duration-200 hover:shadow-float-lg
         hover:-translate-y-0.5 border border-transparent hover:border-gray-100 ${
         compact ? 'p-3' : 'p-4'
-      } ${index !== undefined ? 'animate-stagger-in' : ''}`}
+      } ${index !== undefined ? 'animate-stagger-in' : ''} ${isCancelled ? 'opacity-60' : ''}`}
       style={index !== undefined ? { animationDelay: `${index * 60}ms` } : undefined}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
             <CategoryBadge category={event.category} />
-            {isHappeningNow(event.start_time, event.end_time, event.date) && (
+            {isCancelled && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+                bg-red-100 text-red-700 text-[10px] font-display font-bold uppercase tracking-wider">
+                Cancelled
+              </span>
+            )}
+            {!isCancelled && isHappeningNow(event.start_time, event.end_time, event.date) && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
                 bg-green-100 text-green-700 text-[10px] font-display font-bold uppercase tracking-wider">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -64,13 +71,17 @@ export default function EventCard({ event, onClick, compact = false, index, isIn
               <div className="flex -space-x-1">
                 {friendsInterested.slice(0, 3).map((f, i) => (
                   f.friend_avatar ? (
-                    <img
-                      key={f.friend_id}
-                      src={f.friend_avatar}
-                      alt={f.friend_name}
-                      className="w-4 h-4 rounded-full object-cover border border-white"
-                      style={{ zIndex: 3 - i }}
-                    />
+                    <div key={f.friend_id} className="relative w-4 h-4" style={{ zIndex: 3 - i }}>
+                      <div className="w-4 h-4 rounded-full bg-meets-500 flex items-center justify-center text-white text-[7px] font-bold border border-white">
+                        {f.friend_name?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                      <img
+                        src={f.friend_avatar}
+                        alt={f.friend_name}
+                        className="absolute inset-0 w-4 h-4 rounded-full object-cover border border-white"
+                        onError={(e) => { e.target.style.display = 'none' }}
+                      />
+                    </div>
                   ) : (
                     <div
                       key={f.friend_id}
@@ -98,6 +109,7 @@ export default function EventCard({ event, onClick, compact = false, index, isIn
               src={event.image_url}
               alt=""
               className="w-8 h-8 rounded-lg object-cover"
+              onError={(e) => { e.target.style.display = 'none' }}
             />
           )}
           <InterestedButton
