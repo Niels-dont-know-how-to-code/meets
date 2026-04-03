@@ -68,9 +68,11 @@ export default async function handler(req, res) {
         workflowStatus: 'APPROVED',
       })
 
-      const searchHost = process.env.UITDATABANK_ENV === 'test'
-        ? 'search-test.uitdatabank.be'
-        : 'search.uitdatabank.be'
+      // Use test endpoint until live activation is approved
+      // Switch to 'search.uitdatabank.be' once live credentials are active
+      const searchHost = process.env.UITDATABANK_ENV === 'live'
+        ? 'search.uitdatabank.be'
+        : 'search-test.uitdatabank.be'
       const url = `https://${searchHost}/events/?${params}`
       const response = await fetch(url)
 
