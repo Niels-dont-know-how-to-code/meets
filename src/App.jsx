@@ -25,10 +25,11 @@ import FriendsList from './components/Social/FriendsList'
 import Toast from './components/Toast'
 import CookieConsent from './components/CookieConsent'
 import LegalModal from './components/LegalModal'
+import PasswordResetModal from './components/Auth/PasswordResetModal'
 
 export default function App() {
   // Auth
-  const { user, loading: authLoading, signOut, updateProfile, updatePassword, isAdmin, displayName, avatarUrl, username, checkUsernameAvailable } = useAuth()
+  const { user, loading: authLoading, signOut, updateProfile, updatePassword, isAdmin, displayName, avatarUrl, username, checkUsernameAvailable, isRecovery, clearRecovery } = useAuth()
 
   // Auth modal state
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -495,6 +496,14 @@ export default function App() {
           }}
           onSuccess={editingEvent ? handleUpdateEvent : handleCreateEvent}
           editingEvent={editingEvent}
+        />
+      )}
+
+      {/* Password Reset Modal (shown when user clicks reset link from email) */}
+      {isRecovery && (
+        <PasswordResetModal
+          onClose={clearRecovery}
+          showToast={showToast}
         />
       )}
 
