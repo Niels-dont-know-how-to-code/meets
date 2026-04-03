@@ -60,6 +60,13 @@ export default function OrganizerProfileModal({
               )}
             </div>
 
+            {/* Username */}
+            {profile.username && (
+              <p className="text-sm text-ink-secondary font-body mt-0.5">
+                @{profile.username}
+              </p>
+            )}
+
             {/* Member since */}
             {memberSince && (
               <p className="text-xs text-ink-tertiary font-body mt-1">

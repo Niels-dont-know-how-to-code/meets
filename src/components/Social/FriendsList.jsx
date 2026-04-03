@@ -163,13 +163,13 @@ export default function FriendsList({
             <h3 className="font-display font-bold text-sm text-ink mb-3">Add Friend</h3>
             <div className="flex gap-2">
               <input
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value)
                   setSendResult(null)
                 }}
-                placeholder="Enter email address..."
+                placeholder="Email or @username..."
                 className="flex-1 text-sm font-body border border-gray-200 rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-meets-500 focus:border-transparent"
                 onKeyDown={(e) => e.key === 'Enter' && handleSendRequest()}
               />

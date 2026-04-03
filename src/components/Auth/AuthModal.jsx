@@ -3,11 +3,12 @@ import { X, Mail, Loader2 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 
 export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
-  const { signUp, signIn, resetPassword } = useAuth()
+  const { signUp, signIn, resetPassword, checkUsernameAvailable } = useAuth()
   const [tab, setTab] = useState(initialTab)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
+  const [username, setUsername] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [signUpSuccess, setSignUpSuccess] = useState(false)
@@ -20,6 +21,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
     setEmail('')
     setPassword('')
     setDisplayName('')
+    setUsername('')
     setError('')
     setSignUpSuccess(false)
     setResetSent(false)
@@ -59,6 +61,10 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
       setError('Please enter your name')
       return
     }
+    if (username.trim() && !/^[a-zA-Z0-9._]{3,20}$/.test(username.trim())) {
+      setError('Username must be 3-20 characters (letters, numbers, . and _)')
+      return
+    }
     if (!email.trim()) {
       setError('Please enter your email')
       return
@@ -70,7 +76,17 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
 
     setSubmitting(true)
     try {
-      const { data, error: signUpError } = await signUp(email, password, displayName.trim())
+      // Check username availability if provided
+      if (username.trim()) {
+        const available = await checkUsernameAvailable(username.trim())
+        if (!available) {
+          setError('That username is already taken')
+          setSubmitting(false)
+          return
+        }
+      }
+
+      const { data, error: signUpError } = await signUp(email, password, displayName.trim(), username.trim() || undefined)
       if (signUpError) {
         setError(signUpError.message)
         return
@@ -179,6 +195,21 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
                     transition-shadow"
                   autoFocus
                 />
+              </div>
+              <div>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-tertiary font-body text-sm">@</span>
+                  <input
+                    type="text"
+                    placeholder="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9._]/g, ''))}
+                    maxLength={20}
+                    className="w-full pl-8 pr-4 py-3 bg-surface-secondary rounded-xl font-body text-sm
+                      placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-meets-500
+                      transition-shadow"
+                  />
+                </div>
               </div>
               <div>
                 <input

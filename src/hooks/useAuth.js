@@ -21,12 +21,12 @@ export function useAuth() {
   }, [])
 
   // signUp and signIn return { data, error } directly — errors are handled by the caller (AuthModal)
-  const signUp = async (email, password, displayName) => {
+  const signUp = async (email, password, displayName, username) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { display_name: displayName },
+        data: { display_name: displayName, username: username || undefined },
       },
     })
     return { data, error }
@@ -44,10 +44,11 @@ export function useAuth() {
     supabase.auth.signOut()
   }
 
-  const updateProfile = async ({ displayName: newName, avatarUrl }) => {
+  const updateProfile = async ({ displayName: newName, avatarUrl, username: newUsername }) => {
     const updates = {}
     if (newName !== undefined) updates.display_name = newName
     if (avatarUrl !== undefined) updates.avatar_url = avatarUrl
+    if (newUsername !== undefined) updates.username = newUsername
     const { data, error } = await supabase.auth.updateUser({
       data: updates,
     })
@@ -84,6 +85,15 @@ export function useAuth() {
     'User'
 
   const avatarUrl = user?.user_metadata?.avatar_url || null
+  const username = user?.user_metadata?.username || null
 
-  return { user, loading, signUp, signIn, signOut, updateProfile, updatePassword, resetPassword, isAdmin, displayName, avatarUrl }
+  const checkUsernameAvailable = async (desired) => {
+    const { data, error } = await supabase.rpc('check_username_available', {
+      desired_username: desired,
+    })
+    if (error) return false
+    return data === true
+  }
+
+  return { user, loading, signUp, signIn, signOut, updateProfile, updatePassword, resetPassword, isAdmin, displayName, avatarUrl, username, checkUsernameAvailable }
 }

@@ -2,9 +2,10 @@ import { useState, useRef } from 'react'
 import { X, Camera, Loader2, User, Lock, Check } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
-export default function ProfileSettingsModal({ user, displayName, avatarUrl, onClose, updateProfile, updatePassword, showToast }) {
+export default function ProfileSettingsModal({ user, displayName, avatarUrl, username, onClose, updateProfile, updatePassword, showToast, checkUsernameAvailable }) {
   const [tab, setTab] = useState('profile')
   const [name, setName] = useState(displayName || '')
+  const [usernameInput, setUsernameInput] = useState(username || '')
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [previewUrl, setPreviewUrl] = useState(avatarUrl)
@@ -71,9 +72,26 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, onC
       showToast('Name cannot be empty', 'error')
       return
     }
+    if (usernameInput.trim() && !/^[a-zA-Z0-9._]{3,20}$/.test(usernameInput.trim())) {
+      showToast('Username must be 3-20 characters (letters, numbers, . _)', 'error')
+      return
+    }
     setSaving(true)
     try {
-      const { error } = await updateProfile({ displayName: name.trim() })
+      // Check username availability if changed
+      const trimmedUsername = usernameInput.trim()
+      if (trimmedUsername && trimmedUsername !== username && checkUsernameAvailable) {
+        const available = await checkUsernameAvailable(trimmedUsername)
+        if (!available) {
+          showToast('That username is taken', 'error')
+          setSaving(false)
+          return
+        }
+      }
+      const { error } = await updateProfile({
+        displayName: name.trim(),
+        username: trimmedUsername || undefined,
+      })
       if (error) throw error
       showToast('Profile updated!')
     } catch (err) {
@@ -213,6 +231,27 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, onC
                 />
               </div>
 
+              {/* Username */}
+              <div>
+                <label className="block text-sm font-display font-semibold text-ink mb-1.5">
+                  Username
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-tertiary font-body text-sm">@</span>
+                  <input
+                    type="text"
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value.replace(/[^a-zA-Z0-9._]/g, ''))}
+                    maxLength={20}
+                    className="w-full pl-8 pr-4 py-3 bg-surface-secondary rounded-xl font-body text-sm
+                      placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-meets-500
+                      transition-shadow"
+                    placeholder="your_username"
+                  />
+                </div>
+                <p className="text-[11px] text-ink-tertiary font-body mt-1">Others can find you by @username</p>
+              </div>
+
               {/* Email (read-only) */}
               <div>
                 <label className="block text-sm font-display font-semibold text-ink mb-1.5">
@@ -230,7 +269,7 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, onC
               {/* Save */}
               <button
                 onClick={handleSaveProfile}
-                disabled={saving || name.trim() === displayName}
+                disabled={saving || (name.trim() === displayName && usernameInput.trim() === (username || ''))}
                 className="w-full py-3 rounded-xl font-display font-bold text-sm text-white
                   bg-meets-500 hover:bg-meets-600 disabled:opacity-50 transition-colors
                   flex items-center justify-center gap-2"

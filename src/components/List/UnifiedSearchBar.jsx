@@ -223,11 +223,16 @@ export default function UnifiedSearchBar({
                   ) : (
                     <Users size={14} className="text-meets-500 flex-shrink-0" />
                   )}
-                  <span className="text-sm font-body text-ink truncate flex items-center gap-1">
-                    {org.display_name}
-                    {org.is_verified && <BadgeCheck size={12} className="text-meets-500" />}
-                  </span>
-                  <span className="ml-auto text-[10px] text-ink-tertiary font-body whitespace-nowrap">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-body text-ink truncate flex items-center gap-1">
+                      {org.display_name}
+                      {org.is_verified && <BadgeCheck size={12} className="text-meets-500" />}
+                    </span>
+                    {org.username && (
+                      <span className="block text-[10px] text-ink-tertiary font-body truncate">@{org.username}</span>
+                    )}
+                  </div>
+                  <span className="ml-auto text-[10px] text-ink-tertiary font-body whitespace-nowrap flex-shrink-0">
                     {org.follower_count} followers
                   </span>
                 </button>

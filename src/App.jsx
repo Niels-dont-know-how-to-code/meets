@@ -27,7 +27,7 @@ import CookieConsent from './components/CookieConsent'
 
 export default function App() {
   // Auth
-  const { user, loading: authLoading, signOut, updateProfile, updatePassword, isAdmin, displayName, avatarUrl } = useAuth()
+  const { user, loading: authLoading, signOut, updateProfile, updatePassword, isAdmin, displayName, avatarUrl, username, checkUsernameAvailable } = useAuth()
 
   // Auth modal state
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -504,6 +504,8 @@ export default function App() {
           updateProfile={updateProfile}
           updatePassword={updatePassword}
           showToast={showToast}
+          username={username}
+          checkUsernameAvailable={checkUsernameAvailable}
         />
       )}
 

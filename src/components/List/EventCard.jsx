@@ -51,7 +51,9 @@ export default function EventCard({ event, onClick, compact = false, index, isIn
 
           <div className="flex items-center gap-2 mt-2">
             <span className="text-xs text-ink-tertiary font-body inline-flex items-center gap-0.5">
-              by {event.creator_username || 'Anonymous'}
+              {event.creator_handle
+                ? <span className="text-ink-secondary">@{event.creator_handle}</span>
+                : `by ${event.creator_username || 'Anonymous'}`}
               {event.is_verified && <BadgeCheck size={12} className="text-meets-500" />}
             </span>
           </div>
