@@ -24,6 +24,7 @@ import OrganizerProfileModal from './components/Social/OrganizerProfileModal'
 import FriendsList from './components/Social/FriendsList'
 import Toast from './components/Toast'
 import CookieConsent from './components/CookieConsent'
+import LegalModal from './components/LegalModal'
 
 export default function App() {
   // Auth
@@ -110,6 +111,7 @@ export default function App() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showOrganizerProfile, setShowOrganizerProfile] = useState(null)
   const [showFriendsList, setShowFriendsList] = useState(false)
+  const [showLegal, setShowLegal] = useState(null) // 'privacy' | 'terms' | null
 
   // Close all popups helper — closes dropdowns when another opens
   const closePopups = useCallback(() => {
@@ -136,6 +138,15 @@ export default function App() {
       }
     }
   }, [events, pendingEventId])
+
+  // Timeout for shared event links — if event not found after loading
+  useEffect(() => {
+    if (!pendingEventId || eventsLoading) return
+    if (events.length >= 0 && !events.find(e => e.id === pendingEventId)) {
+      showToast('Event not found — it may have been removed', 'error')
+      setPendingEventId(null)
+    }
+  }, [pendingEventId, eventsLoading, events])
 
   // Filtered events for list (by bounds and category)
   const filteredEvents = useMemo(() => {
@@ -506,6 +517,7 @@ export default function App() {
           showToast={showToast}
           username={username}
           checkUsernameAvailable={checkUsernameAvailable}
+          onOpenLegal={setShowLegal}
         />
       )}
 
@@ -546,8 +558,16 @@ export default function App() {
         />
       )}
 
+      {/* Legal modals */}
+      {showLegal && (
+        <LegalModal type={showLegal} onClose={() => setShowLegal(null)} />
+      )}
+
       {/* Cookie consent banner */}
-      <CookieConsent />
+      <CookieConsent
+        onOpenPrivacy={() => setShowLegal('privacy')}
+        onOpenTerms={() => setShowLegal('terms')}
+      />
 
       {/* Loading overlay */}
       {(authLoading || geoLoading) && (

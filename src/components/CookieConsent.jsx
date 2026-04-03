@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export default function CookieConsent() {
+export default function CookieConsent({ onOpenPrivacy, onOpenTerms }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -29,7 +29,10 @@ export default function CookieConsent() {
     >
       <div className="max-w-lg mx-auto px-5 py-4 flex flex-col sm:flex-row items-center gap-3">
         <p className="font-body text-sm text-ink-secondary text-center sm:text-left flex-1">
-          We use cookies to keep you logged in and improve your experience.
+          We use cookies to keep you logged in and improve your experience.{' '}
+          <button onClick={onOpenPrivacy} className="underline hover:text-ink transition-colors">Privacy Policy</button>
+          {' & '}
+          <button onClick={onOpenTerms} className="underline hover:text-ink transition-colors">Terms</button>.
         </p>
         <div className="flex items-center gap-3 shrink-0">
           <button

@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { X, Camera, Loader2, User, Lock, Check } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
-export default function ProfileSettingsModal({ user, displayName, avatarUrl, username, onClose, updateProfile, updatePassword, showToast, checkUsernameAvailable }) {
+export default function ProfileSettingsModal({ user, displayName, avatarUrl, username, onClose, updateProfile, updatePassword, showToast, checkUsernameAvailable, onOpenLegal }) {
   const [tab, setTab] = useState('profile')
   const [name, setName] = useState(displayName || '')
   const [usernameInput, setUsernameInput] = useState(username || '')
@@ -355,6 +355,23 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, use
               </button>
             </form>
           )}
+
+          {/* Legal links */}
+          <div className="mt-4 pt-4 border-t border-surface-secondary flex items-center justify-center gap-3">
+            <button
+              onClick={() => onOpenLegal?.('privacy')}
+              className="text-xs text-ink-tertiary font-body hover:text-ink-secondary transition-colors"
+            >
+              Privacy Policy
+            </button>
+            <span className="text-xs text-ink-tertiary">|</span>
+            <button
+              onClick={() => onOpenLegal?.('terms')}
+              className="text-xs text-ink-tertiary font-body hover:text-ink-secondary transition-colors"
+            >
+              Terms of Service
+            </button>
+          </div>
         </div>
       </div>
     </div>

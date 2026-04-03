@@ -13,23 +13,34 @@ function MapRecenter({ center, flyTarget }) {
   const prevCenter = useRef(center)
   const prevFlyTarget = useRef(null)
 
-  useEffect(() => {
-    if (!center) return
-    const [lat, lng] = center
-    const [pLat, pLng] = prevCenter.current || []
+  const isMapReady = () => {
+    try {
+      const size = map.getSize()
+      return size.x > 0 && size.y > 0
+    } catch { return false }
+  }
 
+  useEffect(() => {
+    if (!center || !Array.isArray(center)) return
+    const [lat, lng] = center
+    if (lat == null || lng == null || isNaN(lat) || isNaN(lng)) return
+    if (!isMapReady()) return
+
+    const [pLat, pLng] = prevCenter.current || []
     if (lat !== pLat || lng !== pLng) {
-      map.flyTo(center, map.getZoom(), { duration: 0.8 })
+      map.flyTo([lat, lng], map.getZoom(), { duration: 0.8 })
       prevCenter.current = center
     }
   }, [center, map])
 
   useEffect(() => {
     if (!flyTarget) return
-    if (flyTarget._t !== prevFlyTarget.current) {
-      map.flyTo([flyTarget.lat, flyTarget.lng], Math.max(map.getZoom(), 15), { duration: 0.8 })
-      prevFlyTarget.current = flyTarget._t
-    }
+    if (flyTarget._t === prevFlyTarget.current) return
+    if (!isMapReady()) return
+    const { lat, lng } = flyTarget
+    if (lat == null || lng == null || isNaN(lat) || isNaN(lng)) return
+    map.flyTo([lat, lng], Math.max(map.getZoom(), 15), { duration: 0.8 })
+    prevFlyTarget.current = flyTarget._t
   }, [flyTarget, map])
 
   return null
