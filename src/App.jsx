@@ -27,7 +27,7 @@ import CookieConsent from './components/CookieConsent'
 
 export default function App() {
   // Auth
-  const { user, loading: authLoading, signOut, updateProfile, updatePassword, isAdmin, isOrganiser, toggleOrganiser, displayName, avatarUrl } = useAuth()
+  const { user, loading: authLoading, signOut, updateProfile, updatePassword, isAdmin, displayName, avatarUrl } = useAuth()
 
   // Auth modal state
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -484,7 +484,6 @@ export default function App() {
           }}
           onSuccess={editingEvent ? handleUpdateEvent : handleCreateEvent}
           editingEvent={editingEvent}
-          isOrganiser={isOrganiser}
         />
       )}
 
@@ -505,8 +504,6 @@ export default function App() {
           updateProfile={updateProfile}
           updatePassword={updatePassword}
           showToast={showToast}
-          isOrganiser={isOrganiser}
-          toggleOrganiser={toggleOrganiser}
         />
       )}
 

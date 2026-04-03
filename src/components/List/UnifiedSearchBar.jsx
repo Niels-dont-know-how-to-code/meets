@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Search, MapPin, Users, Calendar, X, Star, BadgeCheck } from 'lucide-react';
+import { Search, MapPin, Users, Calendar, X, BadgeCheck } from 'lucide-react';
 import { searchAddress } from '../../lib/geocoding';
 
 export default function UnifiedSearchBar({
@@ -10,12 +10,12 @@ export default function UnifiedSearchBar({
   onFriendClick,
   events = [],
   onEventClick,
-  searchOrganisers,
+  searchPeople,
   onOrganizerClick,
 }) {
   const [focused, setFocused] = useState(false);
   const [places, setPlaces] = useState([]);
-  const [organisers, setOrganisers] = useState([]);
+  const [organisers, setPeople] = useState([]);
   const [searchingPlaces, setSearchingPlaces] = useState(false);
   const debounceRef = useRef(null);
   const containerRef = useRef(null);
@@ -26,7 +26,7 @@ export default function UnifiedSearchBar({
   useEffect(() => {
     if (query.length < 3) {
       setPlaces([]);
-      setOrganisers([]);
+      setPeople([]);
       return;
     }
 
@@ -35,17 +35,17 @@ export default function UnifiedSearchBar({
       setSearchingPlaces(true);
       const [placeResults, orgResults] = await Promise.all([
         searchAddress(query),
-        searchOrganisers ? searchOrganisers(query) : [],
+        searchPeople ? searchPeople(query) : [],
       ]);
       setPlaces(placeResults.slice(0, 3));
-      setOrganisers(orgResults || []);
+      setPeople(orgResults || []);
       setSearchingPlaces(false);
     }, 600);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query, searchOrganisers]);
+  }, [query, searchPeople]);
 
   // Filter friends by query
   const matchedFriends = query.length >= 2
@@ -209,7 +209,7 @@ export default function UnifiedSearchBar({
           {organisers.length > 0 && (
             <div>
               <div className="px-3 py-1.5 text-[10px] font-display font-bold text-ink-tertiary uppercase tracking-wider bg-gray-50">
-                Organisers
+                People
               </div>
               {organisers.map((org) => (
                 <button
@@ -221,7 +221,7 @@ export default function UnifiedSearchBar({
                   {org.avatar_url ? (
                     <img src={org.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
                   ) : (
-                    <Star size={14} className="text-amber-500 flex-shrink-0" />
+                    <Users size={14} className="text-meets-500 flex-shrink-0" />
                   )}
                   <span className="text-sm font-body text-ink truncate flex items-center gap-1">
                     {org.display_name}

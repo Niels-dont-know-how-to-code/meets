@@ -5,7 +5,7 @@ import { formatDateForApi } from '../../lib/dateUtils';
 import LocationPicker from '../Map/LocationPicker';
 import TimePicker from './TimePicker';
 
-export default function HostEventModal({ user, onClose, onSuccess, editingEvent = null, isOrganiser = false }) {
+export default function HostEventModal({ user, onClose, onSuccess, editingEvent = null }) {
   const todayStr = formatDateForApi(new Date());
 
   const [form, setForm] = useState({
@@ -19,7 +19,7 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
     lat: null,
     lng: null,
     address_label: '',
-    visibility: isOrganiser ? 'public' : 'friends',
+    visibility: 'public',
   });
 
   const [errors, setErrors] = useState({});
@@ -40,7 +40,7 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
         lat: editingEvent.lat ?? null,
         lng: editingEvent.lng ?? null,
         address_label: editingEvent.address_label || '',
-        visibility: editingEvent.visibility || (isOrganiser ? 'public' : 'friends'),
+        visibility: editingEvent.visibility || 'public',
       });
     }
   }, [editingEvent]);
@@ -205,17 +205,6 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => !isOrganiser && updateField('visibility', 'friends')}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-display font-semibold transition-all border ${
-                    form.visibility === 'friends'
-                      ? 'bg-meets-50 text-meets-600 border-meets-200'
-                      : 'bg-surface-secondary text-ink-secondary border-transparent hover:border-gray-200'
-                  } ${isOrganiser ? 'opacity-40 cursor-not-allowed' : ''}`}
-                >
-                  Friends Only
-                </button>
-                <button
-                  type="button"
                   onClick={() => updateField('visibility', 'public')}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-display font-semibold transition-all border ${
                     form.visibility === 'public'
@@ -225,10 +214,18 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
                 >
                   Public
                 </button>
+                <button
+                  type="button"
+                  onClick={() => updateField('visibility', 'friends')}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-display font-semibold transition-all border ${
+                    form.visibility === 'friends'
+                      ? 'bg-meets-50 text-meets-600 border-meets-200'
+                      : 'bg-surface-secondary text-ink-secondary border-transparent hover:border-gray-200'
+                  }`}
+                >
+                  Friends Only
+                </button>
               </div>
-              {isOrganiser && (
-                <p className="text-[11px] text-ink-tertiary font-body mt-1">Organiser events are always public</p>
-              )}
             </div>
 
             {/* Organizer Name */}

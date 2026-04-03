@@ -77,23 +77,6 @@ export function useAuth() {
   }
 
   const isAdmin = user?.app_metadata?.role === 'admin'
-  const isOrganiser = user?.app_metadata?.is_organiser === true
-
-  const toggleOrganiser = async (enable) => {
-    const { error } = await supabase.rpc('toggle_organiser_status', { enable })
-    if (error) {
-      console.error('Error toggling organiser:', error)
-      return { error }
-    }
-    // Refresh session so JWT contains updated app_metadata
-    const { data: refreshData, error: refreshErr } = await supabase.auth.refreshSession()
-    if (refreshErr) {
-      console.error('Error refreshing session:', refreshErr)
-      return { error: refreshErr }
-    }
-    setUser(refreshData.session?.user ?? null)
-    return { success: true }
-  }
 
   const displayName =
     user?.user_metadata?.display_name ||
@@ -102,5 +85,5 @@ export function useAuth() {
 
   const avatarUrl = user?.user_metadata?.avatar_url || null
 
-  return { user, loading, signUp, signIn, signOut, updateProfile, updatePassword, resetPassword, isAdmin, isOrganiser, toggleOrganiser, displayName, avatarUrl }
+  return { user, loading, signUp, signIn, signOut, updateProfile, updatePassword, resetPassword, isAdmin, displayName, avatarUrl }
 }
