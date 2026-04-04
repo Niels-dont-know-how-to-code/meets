@@ -9,7 +9,7 @@ npm run dev    # starts at http://localhost:5173
 A Waze-inspired web app where students can discover and host local events on an interactive map. Built for the Leuven/Belgium student community. Mobile-first, works on Safari and Chrome.
 
 ## Stack
-- **Frontend:** React 18 (Vite), TailwindCSS v3
+- **Frontend:** React 19 (Vite 8), TailwindCSS v3
 - **Backend:** Supabase (PostgreSQL + Auth + RLS + Storage)
 - **Map:** React Leaflet + OpenStreetMap tiles + react-leaflet-cluster
 - **Icons:** Lucide React
@@ -42,9 +42,11 @@ A Waze-inspired web app where students can discover and host local events on an 
 ## Architecture
 - **Single-page app**, no router — everything lives on one page
 - **Map is full-screen** (100dvh), all UI floats on top with z-index layers (z-10 to z-50)
-- **State lives in App.jsx:** selectedDate, showList, showHostForm, showEventDetail, editingEvent, mapBounds, selectedCategory, activeTab, searchQuery, showAuthModal
+- **State lives in App.jsx:** selectedDate, showList, showHostForm, showEventDetail, editingEvent, mapBounds, selectedCategory, activeTab, searchQuery, showAuthModal, showSettings, mapFlyTarget, pendingEventId
+- **Hooks in App.jsx:** useAuth, useGeolocation, useEvents, useToast, useReports, useInstallPrompt
 - **Data flow:** App.jsx → useEvents(selectedDate) → fetches from Supabase RPC → passes events to MapView + ListOverlay
 - **Filtering:** Category filter + map bounds filter + text search — all client-side on fetched events
+- **Share links:** `?event=<id>` URL param opens event detail on load via pendingEventId
 - **Optimistic updates:** Heart/interested toggle updates UI immediately, rolls back on error
 
 ## File Structure
@@ -72,7 +74,7 @@ src/
     Auth/
       AuthModal.jsx                ← Sign Up / Log In modal with tabs, confirm password, show/hide toggle, social login
       LoginButton.jsx              ← Floating login button / user avatar
-      AuthGuard.jsx                ← Conditional render based on auth state
+      ProfileSettingsModal.jsx     ← Profile settings: update display name, avatar, password
     Map/
       MapView.jsx                  ← Full-screen Leaflet map with MarkerClusterGroup
       MapSkeleton.jsx              ← Pulsing ghost pin placeholders while loading
@@ -93,8 +95,12 @@ src/
       HostEventModal.jsx           ← Create/edit form with all fields + LocationPicker + image upload
       CategoryBadge.jsx            ← Colored category pill
       InterestedButton.jsx         ← Heart toggle with count
+      TimePicker.jsx               ← Custom time picker (touch-friendly, coarse pointer detection)
+    ErrorBoundary.jsx              ← React error boundary wrapper
     Toast.jsx                      ← Toast notification (success/error, auto-dismiss)
     InstallPrompt.jsx              ← PWA "Add to Home Screen" floating banner
+  test/
+    setup.js                       ← Vitest setup: window.matchMedia polyfill for jsdom
 ```
 
 ## Key Patterns
