@@ -4,6 +4,9 @@ import CommunityList from './CommunityList'
 import CommunityDetail from './CommunityDetail'
 import CreateCommunityForm from './CreateCommunityForm'
 import CommunitySettings from './CommunitySettings'
+import CommunityDiscover from './CommunityDiscover'
+import CreateSubgroupForm from './CreateSubgroupForm'
+import ChatView from './ChatView'
 
 export default function CommunityOverlay({
   show,
@@ -15,7 +18,7 @@ export default function CommunityOverlay({
   showToast,
 }) {
   // Internal navigation stack
-  const [screen, setScreen] = useState('list') // 'list' | 'detail' | 'create' | 'settings' | 'subgroup-chat'
+  const [screen, setScreen] = useState('list') // 'list' | 'detail' | 'create' | 'settings' | 'subgroup-chat' | 'discover' | 'create-subgroup'
   const [activeCommunity, setActiveCommunity] = useState(null)
   const [activeSubgroup, setActiveSubgroup] = useState(null)
   const [communityDetail, setCommunityDetail] = useState(null)
@@ -84,14 +87,35 @@ export default function CommunityOverlay({
     communityHook.refreshCommunities()
   }, [communityHook, showToast, navigateTo])
 
+  const handleCreateSubgroup = useCallback(async (data) => {
+    const result = await communityHook.createSubgroup(activeCommunity?.id, data)
+    if (result?.error) {
+      showToast?.(result.error, 'error')
+      return
+    }
+    showToast?.('Group created!')
+    navigateTo('detail')
+    // Refresh detail to show new subgroup
+    const detail = await communityHook.fetchCommunityDetail(activeCommunity.id)
+    if (detail) setCommunityDetail(detail)
+  }, [activeCommunity, communityHook, showToast, navigateTo])
+
+  const handleRequestJoin = useCallback(async (communityId) => {
+    const result = await communityHook.requestJoin(communityId)
+    if (result?.error) {
+      showToast?.(result.error, 'error')
+      return
+    }
+    showToast?.('Join request sent!')
+  }, [communityHook, showToast])
+
   const handleBack = useCallback(() => {
-    if (screen === 'subgroup-chat') {
+    if (screen === 'subgroup-chat' || screen === 'create-subgroup') {
       navigateTo('detail')
-      // Reload main channel messages
-      if (activeCommunity) {
+      if (screen === 'subgroup-chat' && activeCommunity) {
         communityHook.fetchMessages(activeCommunity.id, null).then(msgs => setMessages(msgs || []))
       }
-    } else if (screen === 'detail' || screen === 'create' || screen === 'settings') {
+    } else if (screen === 'detail' || screen === 'create' || screen === 'settings' || screen === 'discover') {
       navigateTo('list')
       setActiveCommunity(null)
       setCommunityDetail(null)
@@ -138,11 +162,11 @@ export default function CommunityOverlay({
           <div className="w-10 h-1 rounded-full bg-gray-300" />
         </div>
 
-        {/* Header — only for list and create screens */}
-        {(screen === 'list' || screen === 'create') && (
+        {/* Header — for list, create, discover, create-subgroup screens */}
+        {['list', 'create', 'discover', 'create-subgroup'].includes(screen) && (
           <div className="flex items-center justify-between px-5 pt-3 pb-2 flex-shrink-0">
             <div className="flex items-center gap-2">
-              {screen === 'create' && (
+              {screen !== 'list' && (
                 <button
                   onClick={handleBack}
                   className="p-1.5 rounded-full hover:bg-surface-secondary transition-colors text-ink-secondary"
@@ -151,7 +175,7 @@ export default function CommunityOverlay({
                 </button>
               )}
               <h2 className="font-display font-extrabold text-xl text-ink tracking-tight">
-                {screen === 'create' ? 'New Community' : 'Communities'}
+                {screen === 'create' ? 'New Community' : screen === 'discover' ? 'Discover' : screen === 'create-subgroup' ? 'New Group' : 'Communities'}
               </h2>
             </div>
             <button
@@ -171,7 +195,7 @@ export default function CommunityOverlay({
                 communities={communities}
                 onSelect={handleSelectCommunity}
                 onCreateClick={() => navigateTo('create')}
-                onDiscoverClick={() => {}}
+                onDiscoverClick={() => navigateTo('discover')}
                 loading={loading}
               />
             </div>
@@ -190,6 +214,7 @@ export default function CommunityOverlay({
               onOpenSettings={() => navigateTo('settings')}
               isAdmin={isAdmin}
               pendingRequestCount={pendingRequests.length}
+              onCreateSubgroup={() => navigateTo('create-subgroup')}
             />
           )}
 
@@ -243,6 +268,7 @@ export default function CommunityOverlay({
               onReject={communityHook.rejectJoin}
               onPromote={communityHook.promoteMember}
               onRemoveMember={communityHook.removeMember}
+              onCreateSubgroup={() => navigateTo('create-subgroup')}
               onLeaveCommunity={async () => {
                 await communityHook.leaveCommunity(activeCommunity.id)
                 navigateTo('list')
@@ -250,6 +276,24 @@ export default function CommunityOverlay({
               }}
               showToast={showToast}
             />
+          )}
+
+          {screen === 'discover' && (
+            <div className="flex-1 overflow-y-auto">
+              <CommunityDiscover
+                onSearch={communityHook.searchCommunities}
+                onRequestJoin={handleRequestJoin}
+              />
+            </div>
+          )}
+
+          {screen === 'create-subgroup' && (
+            <div className="flex-1 overflow-y-auto">
+              <CreateSubgroupForm
+                onSubmit={handleCreateSubgroup}
+                onCancel={handleBack}
+              />
+            </div>
           )}
         </div>
       </div>

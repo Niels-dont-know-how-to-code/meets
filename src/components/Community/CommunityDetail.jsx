@@ -17,6 +17,7 @@ export default function CommunityDetail({
   pendingRequestCount,
   onLoadMore,
   hasMore,
+  onCreateSubgroup,
 }) {
   const [activeTab, setActiveTab] = useState('chat')
 
@@ -118,7 +119,7 @@ export default function CommunityDetail({
             subgroups={subgroups}
             onSelect={onSelectSubgroup}
             isAdmin={isAdmin}
-            onCreateSubgroup={() => {}}
+            onCreateSubgroup={onCreateSubgroup}
           />
         </div>
       )}

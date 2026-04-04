@@ -1,4 +1,4 @@
-import { ArrowLeft, X, Shield, UserMinus, UserPlus, Check, XIcon, LogOut } from 'lucide-react'
+import { ArrowLeft, X, Shield, UserMinus, UserPlus, Check, XIcon, LogOut, Plus } from 'lucide-react'
 import { useState } from 'react'
 
 export default function CommunitySettings({
@@ -10,6 +10,7 @@ export default function CommunitySettings({
   onReject,
   onPromote,
   onRemoveMember,
+  onCreateSubgroup,
   onLeaveCommunity,
   showToast,
 }) {
@@ -147,6 +148,19 @@ export default function CommunitySettings({
             ))}
           </div>
         </div>
+
+        {/* Create Sub-group */}
+        {onCreateSubgroup && (
+          <div className="px-5 py-4 border-b border-gray-100">
+            <button
+              onClick={onCreateSubgroup}
+              className="w-full btn-secondary py-2.5 text-sm font-display font-medium inline-flex items-center justify-center gap-2"
+            >
+              <Plus size={16} />
+              Create New Group
+            </button>
+          </div>
+        )}
 
         {/* Leave Community */}
         <div className="px-5 py-4">

@@ -123,6 +123,22 @@ export function useCommunities(user) {
     return { success: true }
   }, [])
 
+  // Search communities to join (mock: returns communities user is NOT in)
+  const searchCommunities = useCallback(async (term) => {
+    await new Promise(r => setTimeout(r, 250))
+    if (!term || term.length < 2) return []
+    const q = term.toLowerCase()
+    // Return mock "discoverable" communities
+    const discoverable = [
+      { id: 'disc-1', name: 'LOKO Leuven', description: 'Leuvens Overkoepelend Kringorgaan — the umbrella for all student associations', member_count: 342 },
+      { id: 'disc-2', name: 'Pangaea Leuven', description: 'International student organisation. Events, trips, and cultural exchange.', member_count: 218 },
+      { id: 'disc-3', name: 'KU Leuven Sport', description: 'Official sports community. Join teams, find training partners, sign up for tournaments.', member_count: 567 },
+      { id: 'disc-4', name: 'Fakbar Het Veransen', description: 'Fakbar of the Faculty of Engineering. Open every Thursday!', member_count: 89 },
+      { id: 'disc-5', name: 'Alma Veggie Club', description: 'For students who want better vegetarian/vegan options in Leuven restaurants.', member_count: 45 },
+    ]
+    return discoverable.filter(c => c.name.toLowerCase().includes(q) || c.description?.toLowerCase().includes(q))
+  }, [])
+
   // Initial fetch
   useEffect(() => {
     fetchCommunities()
@@ -144,5 +160,6 @@ export function useCommunities(user) {
     removeMember,
     leaveCommunity,
     createSubgroup,
+    searchCommunities,
   }
 }

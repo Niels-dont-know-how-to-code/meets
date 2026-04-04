@@ -52,15 +52,22 @@ export default function CommunityCard({ community, onClick }) {
       </div>
 
       {/* Right side */}
-      <div className="flex-shrink-0 flex flex-col items-end gap-1">
+      <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
         {community.last_message_at && (
-          <span className="text-[10px] text-ink-tertiary">
+          <span className={`text-[10px] ${community.unread_count > 0 ? 'text-meets-500 font-medium' : 'text-ink-tertiary'}`}>
             {formatRelativeTime(community.last_message_at)}
           </span>
         )}
-        {community.my_role === 'admin' && (
-          <Shield size={14} className="text-meets-500" />
-        )}
+        <div className="flex items-center gap-1.5">
+          {community.my_role === 'admin' && (
+            <Shield size={12} className="text-meets-500" />
+          )}
+          {community.unread_count > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-meets-500 text-white text-[10px] font-bold px-1">
+              {community.unread_count > 99 ? '99+' : community.unread_count}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

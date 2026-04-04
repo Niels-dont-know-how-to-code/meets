@@ -21,6 +21,7 @@ export const MOCK_COMMUNITIES = [
     my_role: 'admin',
     last_message_preview: 'Reminder: general assembly this Thursday at 19h in Aula Pieter De Somer',
     last_message_at: h(0.5),
+    unread_count: 3,
   },
   {
     id: 'comm-2',
@@ -33,6 +34,7 @@ export const MOCK_COMMUNITIES = [
     my_role: 'member',
     last_message_preview: 'Who is coming to the cantus on Friday? 🍺',
     last_message_at: h(2),
+    unread_count: 7,
   },
   {
     id: 'comm-3',
@@ -45,6 +47,7 @@ export const MOCK_COMMUNITIES = [
     my_role: 'member',
     last_message_preview: 'Does anyone know a good dentist that takes RIZIV?',
     last_message_at: h(6),
+    unread_count: 0,
   },
 ]
 

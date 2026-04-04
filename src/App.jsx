@@ -464,7 +464,7 @@ export default function App() {
         />
         <CommunityButton
           onClick={handleCommunitiesClick}
-          hasUnread={false}
+          hasUnread={communityHook.communities.some(c => c.unread_count > 0)}
         />
         <FloatingControls
           onToggleList={handleToggleList}
