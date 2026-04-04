@@ -27,6 +27,9 @@ import Toast from './components/Toast'
 import CookieConsent from './components/CookieConsent'
 import LegalModal from './components/LegalModal'
 import PasswordResetModal from './components/Auth/PasswordResetModal'
+import { useCommunities } from './hooks/useCommunities'
+import CommunityButton from './components/Community/CommunityButton'
+import CommunityOverlay from './components/Community/CommunityOverlay'
 
 export default function App() {
   // Auth
@@ -93,6 +96,9 @@ export default function App() {
     markAllRead,
   } = useNotifications(user)
 
+  // Communities
+  const communityHook = useCommunities(user)
+
   // Toast notifications
   const { toast, showToast, hideToast } = useToast()
 
@@ -114,6 +120,7 @@ export default function App() {
   const [showOrganizerProfile, setShowOrganizerProfile] = useState(null)
   const [showFriendsList, setShowFriendsList] = useState(false)
   const [showLegal, setShowLegal] = useState(null) // 'privacy' | 'terms' | null
+  const [showCommunities, setShowCommunities] = useState(false)
 
   // Close all popups helper — closes dropdowns when another opens
   const closePopups = useCallback(() => {
@@ -388,6 +395,15 @@ export default function App() {
     handleOrganizerClick(friend.id)
   }
 
+  const handleCommunitiesClick = () => {
+    closePopups()
+    if (user) {
+      setShowCommunities(true)
+    } else {
+      openAuthModal('login')
+    }
+  }
+
   return (
     <div className="relative w-full font-body" style={{ height: '100dvh' }}>
       {/* Map (full screen, behind everything) */}
@@ -445,6 +461,10 @@ export default function App() {
           onFriendsClick={handleFriendsClick}
           pendingFriendCount={pendingRequests.length}
           onMenuOpen={closePopups}
+        />
+        <CommunityButton
+          onClick={handleCommunitiesClick}
+          hasUnread={false}
         />
         <FloatingControls
           onToggleList={handleToggleList}
@@ -534,6 +554,17 @@ export default function App() {
         searchOrganisers={searchOrganisers}
         onOrganizerClick={handleOrganizerClick}
         totalEventCount={events.length}
+      />
+
+      {/* Community Overlay */}
+      <CommunityOverlay
+        show={showCommunities}
+        onClose={() => setShowCommunities(false)}
+        user={user}
+        communities={communityHook.communities}
+        loading={communityHook.loading}
+        communityHook={communityHook}
+        showToast={showToast}
       />
 
       {/* Event Detail Modal */}
