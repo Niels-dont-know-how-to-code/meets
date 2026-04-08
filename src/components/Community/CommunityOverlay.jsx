@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { X, ArrowLeft } from 'lucide-react'
+import { useCommunityChat } from '../../hooks/useCommunityChat'
 import CommunityList from './CommunityList'
 import CommunityDetail from './CommunityDetail'
 import CreateCommunityForm from './CreateCommunityForm'
@@ -17,13 +18,18 @@ export default function CommunityOverlay({
   communityHook,
   showToast,
 }) {
-  // Internal navigation stack
-  const [screen, setScreen] = useState('list') // 'list' | 'detail' | 'create' | 'settings' | 'subgroup-chat' | 'discover' | 'create-subgroup'
+  // Internal navigation
+  const [screen, setScreen] = useState('list')
   const [activeCommunity, setActiveCommunity] = useState(null)
   const [activeSubgroup, setActiveSubgroup] = useState(null)
   const [communityDetail, setCommunityDetail] = useState(null)
-  const [messages, setMessages] = useState([])
-  const [messagesLoading, setMessagesLoading] = useState(false)
+
+  // Derive chat channel IDs from navigation state
+  const chatCommunityId = (screen === 'detail' || screen === 'subgroup-chat') ? activeCommunity?.id : null
+  const chatSubgroupId = screen === 'subgroup-chat' ? activeSubgroup?.id : null
+
+  // Dedicated chat hook — manages messages, polling, pagination, optimistic send
+  const chat = useCommunityChat(chatCommunityId, chatSubgroupId, user)
 
   const navigateTo = useCallback((newScreen) => {
     setScreen(newScreen)
@@ -31,50 +37,26 @@ export default function CommunityOverlay({
 
   const handleSelectCommunity = useCallback(async (community) => {
     setActiveCommunity(community)
-    setMessagesLoading(true)
+    setActiveSubgroup(null)
     navigateTo('detail')
 
-    // Fetch community detail and messages
+    // Fetch community detail (members, subgroups, pending requests)
     const detail = await communityHook.fetchCommunityDetail(community.id)
     if (detail) setCommunityDetail(detail)
-
-    const msgs = await communityHook.fetchMessages(community.id, null)
-    setMessages(msgs || [])
-    setMessagesLoading(false)
   }, [communityHook, navigateTo])
 
-  const handleSelectSubgroup = useCallback(async (subgroup) => {
+  const handleSelectSubgroup = useCallback((subgroup) => {
     setActiveSubgroup(subgroup)
-    setMessagesLoading(true)
     navigateTo('subgroup-chat')
-
-    const msgs = await communityHook.fetchMessages(activeCommunity?.id, subgroup.id)
-    setMessages(msgs || [])
-    setMessagesLoading(false)
-  }, [communityHook, activeCommunity, navigateTo])
+    // useCommunityChat will auto-fetch messages for the new channel
+  }, [navigateTo])
 
   const handleSendMessage = useCallback(async (content) => {
-    if (!activeCommunity) return
-    const subgroupId = screen === 'subgroup-chat' ? activeSubgroup?.id : null
-
-    // Optimistic update
-    const tempMsg = {
-      id: 'temp-' + Date.now(),
-      sender_id: user?.id,
-      sender_name: user?.user_metadata?.display_name || 'You',
-      sender_avatar: user?.user_metadata?.avatar_url || null,
-      content,
-      created_at: new Date().toISOString(),
-    }
-    setMessages(prev => [...prev, tempMsg])
-
-    const result = await communityHook.sendMessage(activeCommunity.id, subgroupId, content)
+    const result = await chat.sendMessage(content)
     if (result?.error) {
-      // Rollback
-      setMessages(prev => prev.filter(m => m.id !== tempMsg.id))
       showToast?.('Failed to send message', 'error')
     }
-  }, [activeCommunity, activeSubgroup, screen, user, communityHook, showToast])
+  }, [chat, showToast])
 
   const handleCreateCommunity = useCallback(async (data) => {
     const result = await communityHook.createCommunity(data)
@@ -95,7 +77,6 @@ export default function CommunityOverlay({
     }
     showToast?.('Group created!')
     navigateTo('detail')
-    // Refresh detail to show new subgroup
     const detail = await communityHook.fetchCommunityDetail(activeCommunity.id)
     if (detail) setCommunityDetail(detail)
   }, [activeCommunity, communityHook, showToast, navigateTo])
@@ -111,26 +92,25 @@ export default function CommunityOverlay({
 
   const handleBack = useCallback(() => {
     if (screen === 'subgroup-chat' || screen === 'create-subgroup') {
+      setActiveSubgroup(null)
       navigateTo('detail')
-      if (screen === 'subgroup-chat' && activeCommunity) {
-        communityHook.fetchMessages(activeCommunity.id, null).then(msgs => setMessages(msgs || []))
-      }
+      // useCommunityChat will switch back to main channel automatically
     } else if (screen === 'detail' || screen === 'create' || screen === 'settings' || screen === 'discover') {
       navigateTo('list')
       setActiveCommunity(null)
+      setActiveSubgroup(null)
       setCommunityDetail(null)
     }
-  }, [screen, activeCommunity, communityHook, navigateTo])
+  }, [screen, navigateTo])
 
   // Reset when overlay closes
   const handleClose = useCallback(() => {
     onClose()
-    // Delay reset so close animation can play
     setTimeout(() => {
       setScreen('list')
       setActiveCommunity(null)
+      setActiveSubgroup(null)
       setCommunityDetail(null)
-      setMessages([])
     }, 300)
   }, [onClose])
 
@@ -205,8 +185,8 @@ export default function CommunityOverlay({
             <CommunityDetail
               community={activeCommunity}
               user={user}
-              messages={messages}
-              messagesLoading={messagesLoading}
+              messages={chat.messages}
+              messagesLoading={chat.loading}
               onSendMessage={handleSendMessage}
               onBack={handleBack}
               subgroups={currentSubgroups}
@@ -215,6 +195,11 @@ export default function CommunityOverlay({
               isAdmin={isAdmin}
               pendingRequestCount={pendingRequests.length}
               onCreateSubgroup={() => navigateTo('create-subgroup')}
+              onLoadMore={chat.loadMore}
+              hasMore={chat.hasMore}
+              newMessageCount={chat.newMessageCount}
+              onMarkAsRead={chat.markAsRead}
+              onSetIsActive={chat.setIsActive}
             />
           )}
 
@@ -240,10 +225,15 @@ export default function CommunityOverlay({
 
               <div className="flex-1 min-h-0 flex flex-col">
                 <ChatView
-                  messages={messages}
-                  loading={messagesLoading}
+                  messages={chat.messages}
+                  loading={chat.loading}
                   onSendMessage={handleSendMessage}
                   user={user}
+                  onLoadMore={chat.loadMore}
+                  hasMore={chat.hasMore}
+                  newMessageCount={chat.newMessageCount}
+                  onMarkAsRead={chat.markAsRead}
+                  onSetIsActive={chat.setIsActive}
                 />
               </div>
             </div>

@@ -18,6 +18,9 @@ export default function CommunityDetail({
   onLoadMore,
   hasMore,
   onCreateSubgroup,
+  newMessageCount,
+  onMarkAsRead,
+  onSetIsActive,
 }) {
   const [activeTab, setActiveTab] = useState('chat')
 
@@ -112,6 +115,9 @@ export default function CommunityDetail({
           user={user}
           onLoadMore={onLoadMore}
           hasMore={hasMore}
+          newMessageCount={newMessageCount}
+          onMarkAsRead={onMarkAsRead}
+          onSetIsActive={onSetIsActive}
         />
       ) : (
         <div className="flex-1 overflow-y-auto">
