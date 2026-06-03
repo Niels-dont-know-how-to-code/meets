@@ -112,6 +112,11 @@ Good first contributions:
 - Tests for critical user flows
 - Documentation for Supabase setup
 
+## Contributors
+
+- Niels Jansen: creator and primary maintainer
+- OpenAI Codex: AI-assisted project revival, documentation, Supabase setup, and security review
+
 ## License
 
 MIT. See `LICENSE`.
