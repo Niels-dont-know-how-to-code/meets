@@ -14,15 +14,25 @@ export default async function handler(req, res) {
   }
 
   try {
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseKey) {
+      return res.redirect(308, '/')
+    }
+
     const supabase = createClient(
-      process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
+      supabaseUrl,
+      supabaseKey,
+      { auth: { persistSession: false } }
     )
 
     const { data: event } = await supabase
       .from('events')
       .select('title, description, date, start_time, end_time, category, organizer_name, address_label, image_url')
       .eq('id', eventId)
+      .eq('visibility', 'public')
+      .eq('status', 'active')
       .single()
 
     if (!event) {
