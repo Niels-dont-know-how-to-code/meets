@@ -114,8 +114,10 @@ Good first contributions:
 
 ## Contributors
 
-- Niels Jansen: creator and primary maintainer
-- OpenAI Codex: AI-assisted project revival, documentation, Supabase setup, and security review
+| Contributor | Role |
+| --- | --- |
+| [Niels Jansen](https://github.com/Niels-dont-know-how-to-code) | Creator and primary maintainer |
+| [OpenAI](https://github.com/openai) / Codex | AI-assisted project revival, documentation, Supabase setup, and security review |
 
 ## License
 
