@@ -1,0 +1,81 @@
+function toDateString(date) {
+  const value = date instanceof Date ? date : new Date(date)
+  return value.toISOString().slice(0, 10)
+}
+
+export function getDemoEventsForDate(date) {
+  const eventDate = toDateString(date)
+  const createdAt = `${eventDate}T08:00:00.000Z`
+
+  return [
+    {
+      id: '11111111-1111-4111-8111-111111111111',
+      title: 'Open Study Night at Agora',
+      description: 'A low-pressure evening for students to find a table, meet study partners, and finish work before the weekend.',
+      date: eventDate,
+      start_time: '18:30:00+02',
+      end_time: '21:30:00+02',
+      lat: 50.8798,
+      lng: 4.7005,
+      address_label: 'Agora Learning Centre, Leuven',
+      category: 'culture',
+      organizer_name: 'KU Leuven Students',
+      created_by_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      created_at: createdAt,
+      interested_count: 18,
+      creator_username: 'student-team',
+      creator_handle: 'student-team',
+      image_url: null,
+      report_count: 0,
+      distance_km: null,
+      is_verified: true,
+      is_demo: true,
+    },
+    {
+      id: '22222222-2222-4222-8222-222222222222',
+      title: 'Oude Markt Student Meetup',
+      description: 'Casual meetup for new and local students. Bring one friend or come solo.',
+      date: eventDate,
+      start_time: '20:00:00+02',
+      end_time: '23:00:00+02',
+      lat: 50.8791,
+      lng: 4.7012,
+      address_label: 'Oude Markt, Leuven',
+      category: 'party',
+      organizer_name: 'Meets Demo Crew',
+      created_by_id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      created_at: createdAt,
+      interested_count: 42,
+      creator_username: 'meets-demo',
+      creator_handle: 'meets-demo',
+      image_url: null,
+      report_count: 0,
+      distance_km: null,
+      is_verified: false,
+      is_demo: true,
+    },
+    {
+      id: '33333333-3333-4333-8333-333333333333',
+      title: 'Campus Run Club',
+      description: 'A 5K social run along the Dijle with an easy pace group and a faster group.',
+      date: eventDate,
+      start_time: '17:15:00+02',
+      end_time: '18:30:00+02',
+      lat: 50.8746,
+      lng: 4.7074,
+      address_label: 'Sportoase Philipssite, Leuven',
+      category: 'sports',
+      organizer_name: 'Campus Run Club',
+      created_by_id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+      created_at: createdAt,
+      interested_count: 11,
+      creator_username: 'runclub',
+      creator_handle: 'runclub',
+      image_url: null,
+      report_count: 0,
+      distance_km: null,
+      is_verified: false,
+      is_demo: true,
+    },
+  ]
+}

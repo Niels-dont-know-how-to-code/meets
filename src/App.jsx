@@ -60,7 +60,8 @@ export default function App() {
   const {
     events,
     loading: eventsLoading,
-    error,
+    error: eventsError,
+    demoMode,
     userInterests,
     createEvent,
     updateEvent,
@@ -180,7 +181,7 @@ export default function App() {
     fetchSharedEvent()
 
     return () => { cancelled = true }
-  }, [pendingEventId])
+  }, [pendingEventId, showToast])
 
   // Filtered events for list (by bounds and category)
   const filteredEvents = useMemo(() => {
@@ -393,7 +394,6 @@ export default function App() {
       {/* Map (full screen, behind everything) */}
       <MapView
         events={displayEvents}
-        selectedEvent={showEventDetail}
         onMarkerClick={handleMarkerClick}
         onBoundsChange={handleBoundsChange}
         center={position}
@@ -467,6 +467,28 @@ export default function App() {
             <button onClick={handleHostEvent} className="btn-primary text-sm px-5 py-2">
               Host Event
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Load error overlay */}
+      {eventsError && !eventsLoading && !showList && !showHostForm && !showEventDetail && (
+        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-10 w-[min(90vw,22rem)]">
+          <div className="card px-4 py-3 text-center animate-fade-in">
+            <p className="font-body text-sm text-red-600">
+              Could not load events. Pull to refresh or try again later.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Demo mode banner */}
+      {demoMode && !eventsLoading && !showHostForm && !showEventDetail && (
+        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-10 w-[min(90vw,24rem)]">
+          <div className="card px-4 py-3 text-center animate-fade-in">
+            <p className="font-body text-sm text-ink-secondary">
+              Showing demo events because the live Supabase backend is unavailable.
+            </p>
           </div>
         </div>
       )}
@@ -562,7 +584,6 @@ export default function App() {
       {/* Host Event Modal */}
       {showHostForm && (
         <HostEventModal
-          user={user}
           onClose={() => {
             setShowHostForm(false)
             setEditingEvent(null)
@@ -601,7 +622,6 @@ export default function App() {
           checkUsernameAvailable={checkUsernameAvailable}
           onOpenLegal={setShowLegal}
           deleteAccount={deleteAccount}
-          signOut={signOut}
         />
       )}
 
@@ -627,7 +647,6 @@ export default function App() {
           onRemove={removeFriend}
           onSendRequest={sendFriendRequest}
           onClose={() => setShowFriendsList(false)}
-          user={user}
         />
       )}
 

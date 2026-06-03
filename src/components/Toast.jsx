@@ -7,7 +7,7 @@ export default function Toast({ id, message, type = 'success', onClose }) {
   useEffect(() => {
     timerRef.current = setTimeout(onClose, 3000);
     return () => clearTimeout(timerRef.current);
-  }, [id]);
+  }, [id, onClose]);
 
   const isError = type === 'error';
 

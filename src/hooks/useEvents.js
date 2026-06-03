@@ -1,11 +1,32 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { formatDateForApi } from '../lib/dateUtils'
+import { getDemoEventsForDate } from '../lib/demoEvents'
+
+const DEMO_FALLBACK_ENABLED = import.meta.env.DEV || import.meta.env.VITE_DEMO_MODE === 'true'
+const DEMO_FALLBACK_TIMEOUT_MS = 2500
+
+function withDemoFallbackTimeout(promise) {
+  if (!DEMO_FALLBACK_ENABLED) return promise
+
+  return Promise.race([
+    promise,
+    new Promise((resolve) => {
+      window.setTimeout(() => {
+        resolve({
+          data: null,
+          error: new Error('Live backend did not respond in time'),
+        })
+      }, DEMO_FALLBACK_TIMEOUT_MS)
+    }),
+  ])
+}
 
 export function useEvents(selectedDate, fetchOptions = {}) {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [demoMode, setDemoMode] = useState(false)
   const [userInterests, setUserInterests] = useState(new Set())
   const fetchIdRef = useRef(0)
   const fetchOptionsRef = useRef(fetchOptions)
@@ -29,17 +50,20 @@ export function useEvents(selectedDate, fetchOptions = {}) {
     fetchOptionsRef.current = options
     setLoading(true)
     setError(null)
+    setDemoMode(false)
 
     const { endDate, userLat, userLng, radiusKm } = options
 
     try {
-      const { data, error: rpcError } = await supabase.rpc('get_events_with_details', {
-        target_date: formatDateForApi(date),
-        end_date: endDate ? formatDateForApi(endDate) : null,
-        user_lat: userLat ?? null,
-        user_lng: userLng ?? null,
-        radius_km: radiusKm ?? null,
-      })
+      const { data, error: rpcError } = await withDemoFallbackTimeout(
+        supabase.rpc('get_events_with_details', {
+          target_date: formatDateForApi(date),
+          end_date: endDate ? formatDateForApi(endDate) : null,
+          user_lat: userLat ?? null,
+          user_lng: userLng ?? null,
+          radius_km: radiusKm ?? null,
+        })
+      )
 
       if (rpcError) throw rpcError
       if (currentId !== fetchIdRef.current) return // stale request, discard
@@ -56,8 +80,15 @@ export function useEvents(selectedDate, fetchOptions = {}) {
         setUserInterests(interests)
       }
     } catch (err) {
-      console.error('Error fetching events:', err)
-      setError(err.message || 'Failed to load events')
+      if (DEMO_FALLBACK_ENABLED) {
+        console.warn('Using demo events because the live backend is unavailable:', err)
+        setEvents(getDemoEventsForDate(date))
+        setUserInterests(new Set())
+        setDemoMode(true)
+      } else {
+        console.error('Error fetching events:', err)
+        setError(err.message || 'Failed to load events')
+      }
     } finally {
       setLoading(false)
     }
@@ -191,6 +222,7 @@ export function useEvents(selectedDate, fetchOptions = {}) {
     events,
     loading,
     error,
+    demoMode,
     userInterests,
     createEvent,
     updateEvent,

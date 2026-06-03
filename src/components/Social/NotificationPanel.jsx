@@ -20,7 +20,6 @@ export default function NotificationPanel({
   notifications,
   onMarkRead,
   onMarkAllRead,
-  onClose,
   onNotificationClick,
 }) {
   return (

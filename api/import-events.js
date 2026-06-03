@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 
 // UiTDatabank category term IDs → Meets categories
@@ -28,12 +29,13 @@ const REGIONS = ['gem-leuven', 'gem-hasselt']
 const IMPORT_USER_ID = process.env.IMPORT_USER_ID || '0fe51aed-9247-4942-9f7e-213474705ef5'
 
 export default async function handler(req, res) {
-  // Verify cron secret (Vercel sends this automatically for cron jobs)
-  if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
-    // Allow manual trigger with query param in dev
-    if (!req.query.secret || req.query.secret !== process.env.CRON_SECRET) {
-      return res.status(401).json({ error: 'Unauthorized' })
-    }
+  const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret) {
+    return res.status(500).json({ error: 'CRON_SECRET not configured' })
+  }
+
+  if (!isAuthorizedCronRequest(req, cronSecret)) {
+    return res.status(401).json({ error: 'Unauthorized' })
   }
 
   const apiKey = process.env.UITDATABANK_API_KEY
@@ -42,10 +44,15 @@ export default async function handler(req, res) {
   }
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
-  const hasServiceRole = !!process.env.SUPABASE_SERVICE_ROLE_KEY
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  const supabase = createClient(supabaseUrl, supabaseKey)
+  if (!supabaseUrl || !supabaseKey) {
+    return res.status(500).json({ error: 'Supabase service credentials not configured' })
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false },
+  })
 
   try {
     const now = new Date()
@@ -82,7 +89,7 @@ export default async function handler(req, res) {
       }
 
       const data = await response.json()
-      const events = (data.member || []).map(event => parseUitEvent(event, region))
+      const events = (data.member || []).map(event => parseUitEvent(event))
         .filter(Boolean)
 
       allEvents.push(...events)
@@ -118,13 +125,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: 'All events already imported', imported: 0, total: allEvents.length })
     }
 
-    // Disable rate limit trigger for bulk insert (requires service role)
-    if (hasServiceRole) {
-      await supabase.rpc('exec_sql', {
-        query: 'ALTER TABLE events DISABLE TRIGGER event_rate_limit'
-      }).catch(() => {})
-    }
-
     // Insert in batches of 50
     let imported = 0
     const errors = []
@@ -143,13 +143,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // Re-enable rate limit trigger
-    if (hasServiceRole) {
-      await supabase.rpc('exec_sql', {
-        query: 'ALTER TABLE events ENABLE TRIGGER event_rate_limit'
-      }).catch(() => {})
-    }
-
     return res.status(200).json({
       message: `Imported ${imported} new events`,
       imported,
@@ -163,7 +156,27 @@ export default async function handler(req, res) {
   }
 }
 
-function parseUitEvent(event, region) {
+function isAuthorizedCronRequest(req, cronSecret) {
+  const authHeader = req.headers.authorization || ''
+  const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+
+  if (constantTimeEquals(bearerToken, cronSecret)) {
+    return true
+  }
+
+  // Keep query-triggering for local development only.
+  const querySecret = typeof req.query.secret === 'string' ? req.query.secret : ''
+  return process.env.NODE_ENV !== 'production' && constantTimeEquals(querySecret, cronSecret)
+}
+
+function constantTimeEquals(a, b) {
+  const left = Buffer.from(String(a))
+  const right = Buffer.from(String(b))
+  if (left.length !== right.length) return false
+  return timingSafeEqual(left, right)
+}
+
+function parseUitEvent(event) {
   try {
     // Get Dutch name (primary) or first available
     const name = event.name?.nl || event.name?.en || Object.values(event.name || {})[0]
@@ -194,7 +207,6 @@ function parseUitEvent(event, region) {
       endTime = formatTimetz(endDt)
     } else if (event.calendarType === 'periodic') {
       const start = event.startDate
-      const end = event.endDate
       if (!start) return null
 
       const startDt = new Date(start)

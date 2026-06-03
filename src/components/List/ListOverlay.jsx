@@ -212,7 +212,7 @@ export default function ListOverlay({
             onFriendClick={onFriendClick}
             events={events}
             onEventClick={onEventClick}
-            searchOrganisers={searchOrganisers}
+            searchPeople={searchOrganisers}
             onOrganizerClick={onOrganizerClick}
           />
         </div>

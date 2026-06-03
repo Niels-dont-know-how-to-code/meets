@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { X, Camera, Loader2, User, Lock, Check, Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
-export default function ProfileSettingsModal({ user, displayName, avatarUrl, username, onClose, updateProfile, updatePassword, showToast, checkUsernameAvailable, onOpenLegal, deleteAccount, signOut }) {
+export default function ProfileSettingsModal({ user, displayName, avatarUrl, username, onClose, updateProfile, updatePassword, showToast, checkUsernameAvailable, onOpenLegal, deleteAccount }) {
   const [tab, setTab] = useState('profile')
   const [name, setName] = useState(displayName || '')
   const [usernameInput, setUsernameInput] = useState(username || '')
@@ -65,7 +65,7 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, use
       const { error: updateErr } = await updateProfile({ avatarUrl: freshUrl })
       if (updateErr) throw updateErr
       showToast('Avatar updated!')
-    } catch (err) {
+    } catch {
       showToast('Something went wrong', 'error')
     } finally {
       setUploading(false)
@@ -99,7 +99,7 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, use
       })
       if (error) throw error
       showToast('Profile updated!')
-    } catch (err) {
+    } catch {
       showToast('Something went wrong', 'error')
     } finally {
       setSaving(false)
@@ -147,7 +147,7 @@ export default function ProfileSettingsModal({ user, displayName, avatarUrl, use
       }
       showToast('Account deleted')
       onClose()
-    } catch (err) {
+    } catch {
       showToast('Something went wrong', 'error')
       setDeleting(false)
     }

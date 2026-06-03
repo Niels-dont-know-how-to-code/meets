@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, MapPin, X } from 'lucide-react';
 import { searchAddress } from '../../lib/geocoding';
 
-export default function CitySearch({ onCitySelect, onClose }) {
+export default function CitySearch({ onCitySelect }) {
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);

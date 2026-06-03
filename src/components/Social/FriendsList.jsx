@@ -9,7 +9,6 @@ export default function FriendsList({
   onRemove,
   onSendRequest,
   onClose,
-  user,
 }) {
   const [email, setEmail] = useState('')
   const [sending, setSending] = useState(false)

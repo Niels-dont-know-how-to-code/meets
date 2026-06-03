@@ -41,7 +41,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
         return
       }
       setResetSent(true)
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.')
     } finally {
       setSubmitting(false)
@@ -99,7 +99,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
         // Auto-confirmed (unlikely with email confirmation enabled)
         onClose()
       }
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.')
     } finally {
       setSubmitting(false)
@@ -130,7 +130,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
       }
       resetForm()
       onClose()
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.')
     } finally {
       setSubmitting(false)

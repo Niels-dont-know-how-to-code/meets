@@ -1,7 +1,27 @@
 {
   "name": "meets",
-  "private": true,
+  "private": false,
   "version": "0.0.0",
+  "description": "A mobile-first student local events map for discovering, hosting, and sharing events around Belgian campuses.",
+  "license": "MIT",
+  "homepage": "https://meets-eight.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Niels-dont-know-how-to-code/meets.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Niels-dont-know-how-to-code/meets/issues"
+  },
+  "keywords": [
+    "events",
+    "students",
+    "map",
+    "react",
+    "vite",
+    "supabase",
+    "leaflet",
+    "belgium"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -28,8 +48,8 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
-    "postcss": "^8.5.8",
+    "postcss": "^8.5.15",
     "tailwindcss": "^3.4.19",
-    "vite": "^8.0.1"
+    "vite": "^8.0.16"
   }
 }

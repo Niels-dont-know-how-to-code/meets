@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Search, MapPin, Users, Calendar, X, BadgeCheck } from 'lucide-react';
 import { searchAddress } from '../../lib/geocoding';
 

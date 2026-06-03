@@ -5,7 +5,7 @@ import { formatDateForApi } from '../../lib/dateUtils';
 import LocationPicker from '../Map/LocationPicker';
 import TimePicker from './TimePicker';
 
-export default function HostEventModal({ user, onClose, onSuccess, editingEvent = null }) {
+export default function HostEventModal({ onClose, onSuccess, editingEvent = null }) {
   const todayStr = formatDateForApi(new Date());
 
   const [form, setForm] = useState({
@@ -43,7 +43,7 @@ export default function HostEventModal({ user, onClose, onSuccess, editingEvent 
         visibility: editingEvent.visibility || 'public',
       });
     }
-  }, [editingEvent]);
+  }, [editingEvent, todayStr]);
 
   const updateField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));

@@ -17,7 +17,7 @@ function formatTime(timeStr) {
   return timeStr.slice(0, 5)
 }
 
-export default function EventMarker({ event, isSelected, onClick }) {
+export default function EventMarker({ event, onClick }) {
   const isLive = isHappeningNow(event.start_time, event.end_time, event.date)
 
   const icon = useMemo(() => {

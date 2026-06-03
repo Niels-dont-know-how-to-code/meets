@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import { MapBoundsTracker } from '../../hooks/useMapBounds'
 import EventMarker from './EventMarker'
@@ -13,12 +13,12 @@ function MapRecenter({ center, flyTarget }) {
   const prevCenter = useRef(center)
   const prevFlyTarget = useRef(null)
 
-  const isMapReady = () => {
+  const isMapReady = useCallback(() => {
     try {
       const size = map.getSize()
       return size.x > 0 && size.y > 0
     } catch { return false }
-  }
+  }, [map])
 
   useEffect(() => {
     if (!center || !Array.isArray(center)) return
@@ -31,7 +31,7 @@ function MapRecenter({ center, flyTarget }) {
       map.flyTo([lat, lng], map.getZoom(), { duration: 0.8 })
       prevCenter.current = center
     }
-  }, [center, map])
+  }, [center, map, isMapReady])
 
   useEffect(() => {
     if (!flyTarget) return
@@ -41,14 +41,13 @@ function MapRecenter({ center, flyTarget }) {
     if (lat == null || lng == null || isNaN(lat) || isNaN(lng)) return
     map.flyTo([lat, lng], Math.max(map.getZoom(), 15), { duration: 0.8 })
     prevFlyTarget.current = flyTarget._t
-  }, [flyTarget, map])
+  }, [flyTarget, map, isMapReady])
 
   return null
 }
 
 export default function MapView({
   events = [],
-  selectedEvent = null,
   onMarkerClick,
   onBoundsChange,
   center,
@@ -75,7 +74,6 @@ export default function MapView({
         <EventMarker
           key={event.id}
           event={event}
-          isSelected={selectedEvent?.id === event.id}
           onClick={onMarkerClick}
         />
       ))}

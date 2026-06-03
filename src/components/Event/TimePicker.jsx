@@ -200,7 +200,7 @@ function MobileTimePicker({ value, onChange, label, error, onOpen }) {
 
 // --- Desktop: Text Input ---
 
-function DesktopTimePicker({ value, onChange, label, error }) {
+function DesktopTimePicker({ value, onChange, error }) {
   const [displayValue, setDisplayValue] = useState(value || '')
   const prevValid = useRef(value || '')
 
